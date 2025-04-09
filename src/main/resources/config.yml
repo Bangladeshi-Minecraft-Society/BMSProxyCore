@@ -1,0 +1,65 @@
+# BMSProxyCore Configuration
+
+# Staff chat message formatting
+staffchat-prefix: "&b&lStaff &8|"
+message-format: "{prefix} &7[{server}] &f{player} &8»&r {message}"
+
+# Toggle command messages
+toggle-on-message: "&aStaff chat mode &eenabled&a. Your messages will now go to staff chat."
+toggle-off-message: "&aStaff chat mode &cdisabled&a. Your messages will now go to public chat."
+
+# Permission messages
+no-permission-message: "&cYou don't have permission to use this command."
+
+# Admin command messages
+reload-success-message: "&aConfiguration successfully reloaded."
+reload-fail-message: "&cFailed to reload configuration. Check console for errors."
+
+# Discord Webhook Integration
+discord:
+  enabled: false
+  webhook-url: "https://discord.com/api/webhooks/your-webhook-url-here"
+  webhook-name: "Staff Chat"
+  message-format: "**[{server}] {player}**: {message}"
+  # Use Crafatar for avatars - set to false to use webhook default avatar
+  use-player-avatar: true
+  # Show player avatars using Crafatar (https://crafatar.com)
+  avatar-size: 128
+  # Apply the helmet overlay to the avatar (shows if player has a hat layer)
+  avatar-overlay: true
+
+# Private Messaging System
+messaging:
+  # Format for the sender
+  sender-format: "&8[&7You &8→ &7{receiver}&8] &f{message}"
+  # Format for the receiver
+  receiver-format: "&8[&7{sender} &8→ &7You&8] &f{message}"
+  # Format for social spy
+  socialspy-format: "&8[&cSPY&8] &7{sender} &8→ &7{receiver}&8: &f{message}"
+  
+  # Command messages
+  error-player-not-found: "&cPlayer not found."
+  error-message-self: "&cYou cannot message yourself."
+  error-no-reply-target: "&cYou have nobody to reply to."
+  error-invalid-usage-msg: "&cUsage: /msg <player> <message>"
+  error-invalid-usage-reply: "&cUsage: /reply <message>"
+  
+  # Social spy messages
+  socialspy-enabled: "&aSocial spy enabled. You will now see private messages."
+  socialspy-disabled: "&cSocial spy disabled. You will no longer see private messages."
+  
+  # Message toggle
+  msgtoggle-enabled: "&aYou are now accepting private messages."
+  msgtoggle-disabled: "&cYou are no longer accepting private messages."
+  error-player-msgtoggle: "&c{player} is not accepting private messages."
+  
+  # Ignore system
+  ignore-added: "&aYou are now ignoring {player}."
+  ignore-removed: "&aYou are no longer ignoring {player}."
+  error-already-ignoring: "&cYou are already ignoring {player}."
+  error-not-ignoring: "&cYou are not ignoring {player}."
+  error-player-ignored: "&c{player} is ignoring you."
+  error-invalid-usage-ignore: "&cUsage: /ignore <add|remove|list> [player]"
+  ignore-list-header: "&6Players you are ignoring:"
+  ignore-list-entry: "&7- {player}"
+  ignore-list-empty: "&7You are not ignoring any players." 

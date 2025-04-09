@@ -1,0 +1,46 @@
+package com.miecraftbangladesh.bmsproxycore.listeners;
+
+import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.miecraftbangladesh.bmsproxycore.utils.MessageUtils;
+import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.proxy.Player;
+import net.kyori.adventure.text.Component;
+
+public class ChatListener {
+
+    private final BMSProxyCore plugin;
+    private static final String PERMISSION = "bmsproxycore.staffchat.use";
+
+    public ChatListener(BMSProxyCore plugin) {
+        this.plugin = plugin;
+    }
+
+    @Subscribe(order = PostOrder.NORMAL)
+    public void onPlayerChat(PlayerChatEvent event) {
+        Player player = event.getPlayer();
+        
+        // Check if player has staff chat toggled and has permission
+        if (plugin.isStaffChatToggled(player.getUniqueId()) && player.hasPermission(PERMISSION)) {
+            event.setResult(PlayerChatEvent.ChatResult.denied());
+            
+            // Format and broadcast the message
+            Component formattedMessage = MessageUtils.formatStaffChatMessage(
+                    player, 
+                    event.getMessage(), 
+                    plugin.getConfigManager(), 
+                    plugin.getServer()
+            );
+            
+            // Broadcast to all staff members
+            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, PERMISSION);
+            
+            // Send to Discord webhook if enabled
+            plugin.sendStaffChatMessage(player, event.getMessage());
+            
+            // Log to console
+            plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+        }
+    }
+} 
