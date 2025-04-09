@@ -66,7 +66,6 @@ public class MessageCommand implements SimpleCommand {
 
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
-        CommandSource source = invocation.source();
         String[] args = invocation.arguments();
 
         if (args.length == 1) {

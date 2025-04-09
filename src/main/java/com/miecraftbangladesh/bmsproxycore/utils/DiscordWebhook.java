@@ -6,7 +6,6 @@ import okhttp3.*;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 public class DiscordWebhook {
 

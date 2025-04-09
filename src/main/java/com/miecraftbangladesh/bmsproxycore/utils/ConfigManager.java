@@ -1,6 +1,5 @@
 package com.miecraftbangladesh.bmsproxycore.utils;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -79,7 +78,6 @@ public class ConfigManager {
         return value instanceof Map ? (Map<String, Object>) value : new HashMap<>();
     }
 
-    @SuppressWarnings("unchecked")
     public String getNestedString(String section, String path, String defaultValue) {
         Map<String, Object> sectionMap = getSection(section);
         if (sectionMap == null) {
