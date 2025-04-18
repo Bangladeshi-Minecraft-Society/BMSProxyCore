@@ -61,6 +61,69 @@ public class MessageUtils {
     }
 
     /**
+     * Formats a staff server switch message using the configured format.
+     *
+     * @param player The player who switched servers
+     * @param fromServer The server the player switched from
+     * @param toServer The server the player switched to
+     * @param configManager The config manager instance
+     * @return The formatted staff server switch message as a Component
+     */
+    public static Component formatStaffServerSwitchMessage(Player player, String fromServer, String toServer, ConfigManager configManager) {
+        String prefix = configManager.getStaffChatPrefix();
+        String format = configManager.getServerSwitchFormat();
+        
+        format = format.replace("{prefix}", prefix)
+                .replace("{player}", player.getUsername())
+                .replace("{from_server}", fromServer)
+                .replace("{to_server}", toServer);
+        
+        return formatMessage(format);
+    }
+    
+    /**
+     * Formats a staff connect message using the configured format.
+     *
+     * @param player The player who connected
+     * @param configManager The config manager instance
+     * @return The formatted staff connect message as a Component
+     */
+    public static Component formatStaffConnectMessage(Player player, ConfigManager configManager) {
+        String prefix = configManager.getStaffChatPrefix();
+        String format = configManager.getConnectFormat();
+        String serverName = player.getCurrentServer()
+                .map(serverConnection -> serverConnection.getServerInfo().getName())
+                .orElse("Unknown");
+        
+        format = format.replace("{prefix}", prefix)
+                .replace("{player}", player.getUsername())
+                .replace("{server}", serverName);
+        
+        return formatMessage(format);
+    }
+    
+    /**
+     * Formats a staff disconnect message using the configured format.
+     *
+     * @param player The player who disconnected
+     * @param configManager The config manager instance
+     * @return The formatted staff disconnect message as a Component
+     */
+    public static Component formatStaffDisconnectMessage(Player player, ConfigManager configManager) {
+        String prefix = configManager.getStaffChatPrefix();
+        String format = configManager.getDisconnectFormat();
+        String serverName = player.getCurrentServer()
+                .map(serverConnection -> serverConnection.getServerInfo().getName())
+                .orElse("Unknown");
+        
+        format = format.replace("{prefix}", prefix)
+                .replace("{player}", player.getUsername())
+                .replace("{server}", serverName);
+        
+        return formatMessage(format);
+    }
+
+    /**
      * Strips color codes from a message for console logging
      *
      * @param message The message to strip colors from

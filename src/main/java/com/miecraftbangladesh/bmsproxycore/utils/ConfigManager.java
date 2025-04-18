@@ -171,6 +171,32 @@ public class ConfigManager {
         return getNestedBoolean("discord", "avatar-overlay", true);
     }
     
+    // Staff activity formats
+    public String getServerSwitchFormat() {
+        return getString("server-switch-format", "{prefix} &e{player} &7switched from &6{from_server} &7to &6{to_server}");
+    }
+    
+    public String getConnectFormat() {
+        return getString("connect-format", "{prefix} &e{player} &ajoined &7the network");
+    }
+    
+    public String getDisconnectFormat() {
+        return getString("disconnect-format", "{prefix} &e{player} &cleft &7the network");
+    }
+    
+    // Discord staff activity formats
+    public String getDiscordServerSwitchFormat() {
+        return getNestedString("discord", "server-switch-format", "**{player}** switched from **{from_server}** to **{to_server}**");
+    }
+    
+    public String getDiscordConnectFormat() {
+        return getNestedString("discord", "connect-format", "**{player}** joined the network");
+    }
+    
+    public String getDiscordDisconnectFormat() {
+        return getNestedString("discord", "disconnect-format", "**{player}** left the network");
+    }
+    
     // Messaging system configuration
     public String getMessagingSenderFormat() {
         return getNestedString("messaging", "sender-format", "&8[&7You &8→ &7{receiver}&8] &f{message}");

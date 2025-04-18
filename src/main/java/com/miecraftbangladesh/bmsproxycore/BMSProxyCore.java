@@ -2,9 +2,7 @@ package com.miecraftbangladesh.bmsproxycore;
 
 import com.google.inject.Inject;
 import com.miecraftbangladesh.bmsproxycore.commands.*;
-import com.miecraftbangladesh.bmsproxycore.listeners.ChatListener;
-import com.miecraftbangladesh.bmsproxycore.listeners.DisconnectListener;
-import com.miecraftbangladesh.bmsproxycore.listeners.MessagingDisconnectListener;
+import com.miecraftbangladesh.bmsproxycore.listeners.*;
 import com.miecraftbangladesh.bmsproxycore.messaging.MessagingManager;
 import com.miecraftbangladesh.bmsproxycore.utils.ConfigManager;
 import com.miecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
@@ -72,6 +70,10 @@ public class BMSProxyCore {
         // Register StaffChat listeners
         server.getEventManager().register(this, new ChatListener(this));
         server.getEventManager().register(this, new DisconnectListener(this));
+        
+        // Register staff activity listeners
+        server.getEventManager().register(this, new ServerSwitchListener(this));
+        server.getEventManager().register(this, new ConnectionListener(this));
         
         // Register Messaging listeners
         server.getEventManager().register(this, new MessagingDisconnectListener(this));
@@ -142,6 +144,44 @@ public class BMSProxyCore {
         // Send to Discord if enabled
         if (configManager.isDiscordEnabled()) {
             discordWebhook.sendConsoleStaffChatMessage(message);
+        }
+    }
+    
+    /**
+     * Send a server switch notification for a staff member
+     * 
+     * @param player The player who switched servers
+     * @param fromServer The server the player switched from
+     * @param toServer The server the player switched to
+     */
+    public void sendStaffServerSwitchMessage(Player player, String fromServer, String toServer) {
+        // Send to Discord if enabled
+        if (configManager.isDiscordEnabled()) {
+            discordWebhook.sendStaffServerSwitchMessage(player, fromServer, toServer);
+        }
+    }
+    
+    /**
+     * Send a connection notification for a staff member
+     * 
+     * @param player The player who connected
+     */
+    public void sendStaffConnectMessage(Player player) {
+        // Send to Discord if enabled
+        if (configManager.isDiscordEnabled()) {
+            discordWebhook.sendStaffConnectMessage(player);
+        }
+    }
+    
+    /**
+     * Send a disconnection notification for a staff member
+     * 
+     * @param player The player who disconnected
+     */
+    public void sendStaffDisconnectMessage(Player player) {
+        // Send to Discord if enabled
+        if (configManager.isDiscordEnabled()) {
+            discordWebhook.sendStaffDisconnectMessage(player);
         }
     }
 }

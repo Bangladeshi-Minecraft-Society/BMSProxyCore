@@ -104,6 +104,148 @@ public class DiscordWebhook {
     }
     
     /**
+     * Send a staff server switch message to Discord using a webhook
+     *
+     * @param player The player who switched servers
+     * @param fromServer The server the player switched from
+     * @param toServer The server the player switched to
+     */
+    public void sendStaffServerSwitchMessage(Player player, String fromServer, String toServer) {
+        if (!plugin.getConfigManager().isDiscordEnabled()) {
+            return;
+        }
+
+        String webhookUrl = plugin.getConfigManager().getDiscordWebhookUrl();
+        if (webhookUrl.isEmpty() || webhookUrl.equals("https://discord.com/api/webhooks/your-webhook-url-here")) {
+            plugin.getLogger().warn("Discord webhook URL is not configured properly.");
+            return;
+        }
+
+        // Format the message according to config
+        String formattedMessage = plugin.getConfigManager().getDiscordServerSwitchFormat()
+                .replace("{player}", player.getUsername())
+                .replace("{from_server}", fromServer)
+                .replace("{to_server}", toServer);
+
+        // Create webhook payload
+        JSONObject json = new JSONObject();
+        json.put("content", formattedMessage);
+        
+        // Set webhook name if configured
+        String webhookName = plugin.getConfigManager().getDiscordWebhookName();
+        if (!webhookName.isEmpty()) {
+            json.put("username", webhookName);
+        }
+
+        // Set avatar URL using Crafatar if enabled
+        if (plugin.getConfigManager().usePlayerAvatar()) {
+            String avatarUrl = getCrafatarAvatarUrl(player.getUniqueId().toString());
+            if (!avatarUrl.isEmpty()) {
+                json.put("avatar_url", avatarUrl);
+            }
+        }
+
+        // Send the webhook request
+        sendWebhookRequest(webhookUrl, json);
+    }
+    
+    /**
+     * Send a staff connect message to Discord using a webhook
+     *
+     * @param player The player who connected
+     */
+    public void sendStaffConnectMessage(Player player) {
+        if (!plugin.getConfigManager().isDiscordEnabled()) {
+            return;
+        }
+
+        String webhookUrl = plugin.getConfigManager().getDiscordWebhookUrl();
+        if (webhookUrl.isEmpty() || webhookUrl.equals("https://discord.com/api/webhooks/your-webhook-url-here")) {
+            plugin.getLogger().warn("Discord webhook URL is not configured properly.");
+            return;
+        }
+
+        // Get current server
+        String serverName = player.getCurrentServer()
+                .map(serverConnection -> serverConnection.getServerInfo().getName())
+                .orElse("Unknown");
+
+        // Format the message according to config
+        String formattedMessage = plugin.getConfigManager().getDiscordConnectFormat()
+                .replace("{player}", player.getUsername())
+                .replace("{server}", serverName);
+
+        // Create webhook payload
+        JSONObject json = new JSONObject();
+        json.put("content", formattedMessage);
+        
+        // Set webhook name if configured
+        String webhookName = plugin.getConfigManager().getDiscordWebhookName();
+        if (!webhookName.isEmpty()) {
+            json.put("username", webhookName);
+        }
+
+        // Set avatar URL using Crafatar if enabled
+        if (plugin.getConfigManager().usePlayerAvatar()) {
+            String avatarUrl = getCrafatarAvatarUrl(player.getUniqueId().toString());
+            if (!avatarUrl.isEmpty()) {
+                json.put("avatar_url", avatarUrl);
+            }
+        }
+
+        // Send the webhook request
+        sendWebhookRequest(webhookUrl, json);
+    }
+    
+    /**
+     * Send a staff disconnect message to Discord using a webhook
+     *
+     * @param player The player who disconnected
+     */
+    public void sendStaffDisconnectMessage(Player player) {
+        if (!plugin.getConfigManager().isDiscordEnabled()) {
+            return;
+        }
+
+        String webhookUrl = plugin.getConfigManager().getDiscordWebhookUrl();
+        if (webhookUrl.isEmpty() || webhookUrl.equals("https://discord.com/api/webhooks/your-webhook-url-here")) {
+            plugin.getLogger().warn("Discord webhook URL is not configured properly.");
+            return;
+        }
+
+        // Get last server
+        String serverName = player.getCurrentServer()
+                .map(serverConnection -> serverConnection.getServerInfo().getName())
+                .orElse("Unknown");
+
+        // Format the message according to config
+        String formattedMessage = plugin.getConfigManager().getDiscordDisconnectFormat()
+                .replace("{player}", player.getUsername())
+                .replace("{server}", serverName);
+
+        // Create webhook payload
+        JSONObject json = new JSONObject();
+        json.put("content", formattedMessage);
+        
+        // Set webhook name if configured
+        String webhookName = plugin.getConfigManager().getDiscordWebhookName();
+        if (!webhookName.isEmpty()) {
+            json.put("username", webhookName);
+        }
+
+        // Set avatar URL using Crafatar if enabled
+        if (plugin.getConfigManager().usePlayerAvatar()) {
+            String avatarUrl = getCrafatarAvatarUrl(player.getUniqueId().toString());
+            if (!avatarUrl.isEmpty()) {
+                json.put("avatar_url", avatarUrl);
+            }
+        }
+
+        // Send the webhook request
+        sendWebhookRequest(webhookUrl, json);
+    }
+    
+    /**
      * Send a webhook request to Discord
      *
      * @param webhookUrl The Discord webhook URL
