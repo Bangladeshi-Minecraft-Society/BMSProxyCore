@@ -56,8 +56,8 @@ public class ServerSwitchListener {
             // Send to Discord webhook if enabled
             plugin.sendStaffServerSwitchMessage(player, prevServerName, currentServerName);
             
-            // Log to console
-            plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+            // Log to console with proper formatting
+            plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         }
     }
 } 

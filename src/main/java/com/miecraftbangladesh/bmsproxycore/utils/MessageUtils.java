@@ -4,6 +4,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class MessageUtils {
 
@@ -131,6 +132,16 @@ public class MessageUtils {
      */
     public static String stripColorCodes(String message) {
         return message.replaceAll("§[0-9a-fk-or]", "");
+    }
+
+    /**
+     * Converts a Component to plain text for console logging
+     *
+     * @param component The component to convert
+     * @return The plain text representation
+     */
+    public static String componentToPlainText(Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 
     /**

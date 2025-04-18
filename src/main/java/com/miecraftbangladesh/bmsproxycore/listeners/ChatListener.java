@@ -39,8 +39,8 @@ public class ChatListener {
             // Send to Discord webhook if enabled
             plugin.sendStaffChatMessage(player, event.getMessage());
             
-            // Log to console
-            plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+            // Log to console with proper formatting
+            plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         }
     }
 } 

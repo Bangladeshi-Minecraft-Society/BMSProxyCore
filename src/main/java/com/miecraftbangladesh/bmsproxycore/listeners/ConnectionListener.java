@@ -39,8 +39,8 @@ public class ConnectionListener {
         // Send to Discord webhook if enabled
         plugin.sendStaffConnectMessage(player);
         
-        // Log to console
-        plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+        // Log to console with proper formatting
+        plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
     }
     
     @Subscribe(order = PostOrder.NORMAL)
@@ -64,7 +64,7 @@ public class ConnectionListener {
         // Send to Discord webhook if enabled
         plugin.sendStaffDisconnectMessage(player);
         
-        // Log to console
-        plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+        // Log to console with proper formatting
+        plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
     }
 } 

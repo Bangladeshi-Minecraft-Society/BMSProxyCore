@@ -62,8 +62,8 @@ public class StaffChatCommand implements SimpleCommand {
             // Send to Discord webhook if enabled
             plugin.sendStaffChatMessage(player, message);
             
-            // Log to console
-            plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+            // Log to console with proper formatting
+            plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         } else {
             // It's the console sending a message
             String serverName = "Console";
@@ -81,8 +81,8 @@ public class StaffChatCommand implements SimpleCommand {
             // Send to Discord if enabled
             plugin.sendConsoleStaffChatMessage(message);
             
-            // Log to console (although it's from console already)
-            plugin.getLogger().info(MessageUtils.stripColorCodes(formattedMessage.toString()));
+            // Log to console with proper formatting
+            plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         }
     }
 
