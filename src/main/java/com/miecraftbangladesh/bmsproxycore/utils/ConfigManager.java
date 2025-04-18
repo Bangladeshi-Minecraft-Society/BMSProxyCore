@@ -1,10 +1,12 @@
 package com.miecraftbangladesh.bmsproxycore.utils;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.DumperOptions;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -42,6 +44,50 @@ public class ConfigManager {
                     config = new HashMap<>();
                 }
             }
+            
+            // Check for new configuration options and add them if missing
+            boolean configUpdated = false;
+            
+            // Check in-game formatting options
+            if (!config.containsKey("server-switch-format")) {
+                config.put("server-switch-format", "{prefix} &e{player} &7switched from &6{from_server} &7to &6{to_server}");
+                configUpdated = true;
+            }
+            
+            if (!config.containsKey("connect-format")) {
+                config.put("connect-format", "{prefix} &e{player} &ajoined &7the network");
+                configUpdated = true;
+            }
+            
+            if (!config.containsKey("disconnect-format")) {
+                config.put("disconnect-format", "{prefix} &e{player} &cleft &7the network");
+                configUpdated = true;
+            }
+            
+            // Check Discord webhook formatting options
+            Map<String, Object> discordSection = getSection("discord");
+            if (!discordSection.containsKey("server-switch-format")) {
+                discordSection.put("server-switch-format", "**{player}** switched from **{from_server}** to **{to_server}**");
+                config.put("discord", discordSection);
+                configUpdated = true;
+            }
+            
+            if (!discordSection.containsKey("connect-format")) {
+                discordSection.put("connect-format", "**{player}** joined the network");
+                config.put("discord", discordSection);
+                configUpdated = true;
+            }
+            
+            if (!discordSection.containsKey("disconnect-format")) {
+                discordSection.put("disconnect-format", "**{player}** left the network");
+                config.put("discord", discordSection);
+                configUpdated = true;
+            }
+            
+            // Save the config if it was updated
+            if (configUpdated) {
+                saveConfig();
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,6 +103,21 @@ public class ConfigManager {
                 while ((length = inputStream.read(buffer)) > 0) {
                     outputStream.write(buffer, 0, length);
                 }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void saveConfig() {
+        try {
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            options.setPrettyFlow(true);
+            
+            Yaml yaml = new Yaml(options);
+            try (FileWriter writer = new FileWriter(configFile.toFile())) {
+                yaml.dump(config, writer);
             }
         } catch (IOException e) {
             e.printStackTrace();
