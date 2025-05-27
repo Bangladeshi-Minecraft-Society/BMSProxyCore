@@ -1,170 +1,239 @@
 # BMSProxyCore
 
-A Velocity proxy plugin that implements a cross-server staff chat system and private messaging system for Minecraft servers.
+A comprehensive, modular Velocity proxy plugin for staff communication, private messaging, and server management with extensive customization options.
 
-## Features
+## 🌟 Features
 
-- **Staff Chat**: Send and receive messages exclusively among staff members across all connected servers
-- **Toggle Mode**: Switch to a mode where all your messages are automatically sent to staff chat
-- **Discord Integration**: Send staff chat messages to Discord using webhooks with player avatars
-- **Console Support**: View staff chat in console and allow console to send staff chat messages
-- **Private Messaging**: Send private messages to players across all connected servers
-- **Social Spy**: Allow staff to see private messages between players
-- **Message Toggle**: Allow players to toggle whether they receive private messages
-- **Ignore System**: Allow players to ignore messages from specific players
-- **Configurable**: Customize message formats, colors, and feedback messages
-- **Permissions-Based**: Granular permission system for all features
+### 📢 Staff Chat System
+- **Dedicated Staff Communication**: Private channel for staff members
+- **Discord Integration**: Send staff messages to Discord webhooks with player avatars
+- **Staff Activity Tracking**: Monitor staff joins, leaves, and server switches
+- **Configurable Formatting**: Customize message formats and prefixes
+- **Toggle Mode**: Staff can toggle between public and staff chat
 
-## Commands
+### 💬 Private Messaging System
+- **Private Messages**: Send direct messages between players
+- **Reply System**: Quick reply to the last received message
+- **Social Spy**: Monitor all private messages (admin feature)
+- **Message Toggle**: Players can disable incoming messages
+- **Ignore System**: Block messages from specific players
+- **Bypass Permissions**: Staff can bypass toggles and ignores
 
-### Staff Chat Commands
-- `/staffchat <message>` (alias: `/sc <message>`): Send a message to staff chat
-- `/staffchattoggle` (alias: `/sctoggle`): Toggle staff chat mode
-- `/bmsproxycore reload`: Reload the configuration
+### 🏠 Lobby Command System
+- **Server Teleportation**: Quick teleport to configured lobby server
+- **Customizable Commands**: Configure main command and aliases
+- **Cooldown System**: Prevent command spam with configurable cooldowns
+- **Permission-Based**: Flexible permission system with bypass options
 
-### Private Messaging Commands
-- `/msg <player> <message>` (alias: `/whisper`): Send a private message to a player
-- `/reply <message>` (alias: `/r`): Reply to the last player who messaged you
-- `/socialspy`: Toggle social spy mode to see private messages between other players
-- `/msgtoggle`: Toggle whether you receive private messages
-- `/ignore <add|remove|list> [player]`: Manage your ignore list
+### 🔧 Modular Architecture
+- **Module Management**: Enable/disable individual modules
+- **Dynamic Reloading**: Change module states without restart
+- **Separate Configurations**: Dedicated config files per module
+- **Conditional Loading**: Only load enabled modules
 
-## Permissions
+### 🔒 Advanced Permission System
+- **Granular Control**: Individual permissions for each feature
+- **Customizable Permissions**: Configure all permission nodes
+- **Bypass Permissions**: Special permissions for staff privileges
+- **Role-Based Access**: Different permission levels for different ranks
 
-### Staff Chat Permissions
-- `bmsproxycore.staffchat.use`: Required to send messages via `/sc` and receive staff chat messages
-- `bmsproxycore.staffchat.toggle`: Required to use the `/sctoggle` command
-- `bmsproxycore.staffchat.reload`: Required to use the `/bmsproxycore reload` command
+## 📋 Commands
 
-### Private Messaging Permissions
-- `bmsproxycore.message.send`: Required to send private messages with `/msg` and `/whisper`
-- `bmsproxycore.message.reply`: Required to reply to messages with `/reply` and `/r`
-- `bmsproxycore.message.toggle`: Required to toggle private message reception with `/msgtoggle`
-- `bmsproxycore.message.ignore`: Required to use the `/ignore` command
-- `bmsproxycore.socialspy.toggle`: Required to toggle social spy mode
-- `bmsproxycore.socialspy.view`: Required to see private messages in social spy mode
+### Staff Chat Module
+| Command | Aliases | Description | Permission |
+|---------|---------|-------------|------------|
+| `/staffchat <message>` | `/sc` | Send a message to staff chat | `bmsproxycore.staffchat.use` |
+| `/staffchattoggle` | `/sctoggle` | Toggle staff chat mode | `bmsproxycore.staffchat.toggle` |
 
-## Configuration
+### Private Messages Module
+| Command | Aliases | Description | Permission |
+|---------|---------|-------------|------------|
+| `/msg <player> <message>` | `/whisper` | Send a private message | `bmsproxycore.message.send` |
+| `/reply <message>` | `/r` | Reply to last message | `bmsproxycore.message.reply` |
+| `/socialspy` | - | Toggle social spy mode | `bmsproxycore.message.socialspy` |
+| `/msgtoggle` | - | Toggle message acceptance | `bmsproxycore.message.toggle` |
+| `/ignore <add\|remove\|list> [player]` | - | Manage ignored players | `bmsproxycore.message.ignore` |
 
-The plugin configuration file (`config.yml`) allows you to customize various aspects:
+### Lobby Command Module
+| Command | Aliases | Description | Permission |
+|---------|---------|-------------|------------|
+| `/lobby` | `/hub`, `/spawn`, `/main`, `/l` | Teleport to lobby server | `bmsproxycore.lobby.use` |
 
+### Administration
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/bmsproxycore reload` | Reload all configurations and modules | `bmsproxycore.admin.reload` |
+| `/bmsproxycore status` | Show plugin and module status | `bmsproxycore.admin.info` |
+| `/bmsproxycore modules` | Show detailed module information | `bmsproxycore.admin.info` |
+
+## 🔑 Permissions
+
+### Staff Chat Module
+- `bmsproxycore.staffchat.use` - Use staff chat commands and see messages
+- `bmsproxycore.staffchat.toggle` - Toggle staff chat mode
+- `bmsproxycore.staffchat.reload` - Reload staff chat configuration
+- `bmsproxycore.staffchat.activity` - See staff activity notifications
+
+### Private Messages Module
+- `bmsproxycore.message.send` - Send private messages
+- `bmsproxycore.message.reply` - Reply to messages
+- `bmsproxycore.message.socialspy` - Use social spy feature
+- `bmsproxycore.message.toggle` - Toggle message acceptance
+- `bmsproxycore.message.ignore` - Use ignore system
+- `bmsproxycore.message.bypass.toggle` - Bypass message toggle
+- `bmsproxycore.message.bypass.ignore` - Bypass ignore system
+
+### Lobby Command Module
+- `bmsproxycore.lobby.use` - Use lobby teleport commands
+- `bmsproxycore.lobby.cooldown.bypass` - Bypass command cooldown
+
+### Administration
+- `bmsproxycore.admin.reload` - Reload configurations
+- `bmsproxycore.admin.info` - View plugin information
+
+## ⚙️ Configuration
+
+### Main Configuration (`config.yml`)
 ```yaml
-# Staff chat message formatting
+# Module Configuration
+modules:
+  staffchat:
+    enabled: true
+  private_messages:
+    enabled: true
+  lobby_command:
+    enabled: true
+
+# Global Messages
+global:
+  no-permission-message: "&cYou don't have permission to use this command."
+  reload-success-message: "&aConfiguration successfully reloaded."
+  module-disabled-message: "&cThis feature is currently disabled."
+```
+
+### Staff Chat Configuration (`staffchat.yml`)
+```yaml
+# Permission Configuration
+permissions:
+  use: "bmsproxycore.staffchat.use"
+  toggle: "bmsproxycore.staffchat.toggle"
+  activity: "bmsproxycore.staffchat.activity"
+
+# Message Formatting
 staffchat-prefix: "&b&lStaff &8|"
 message-format: "{prefix} &7[{server}] &f{player} &8»&r {message}"
 
-# Toggle command messages
-toggle-on-message: "&aStaff chat mode &eenabled&a. Your messages will now go to staff chat."
-toggle-off-message: "&aStaff chat mode &cdisabled&a. Your messages will now go to public chat."
-
-# Permission messages
-no-permission-message: "&cYou don't have permission to use this command."
-
-# Admin command messages
-reload-success-message: "&aConfiguration successfully reloaded."
-reload-fail-message: "&cFailed to reload configuration. Check console for errors."
-
-# Discord Webhook Integration
+# Discord Integration
 discord:
   enabled: false
   webhook-url: "https://discord.com/api/webhooks/your-webhook-url-here"
   webhook-name: "Staff Chat"
-  message-format: "**[{server}] {player}**: {message}"
-  # Use Crafatar for avatars - set to false to use webhook default avatar
   use-player-avatar: true
-  # Show player avatars using Crafatar (https://crafatar.com)
-  avatar-size: 128
-  # Apply the helmet overlay to the avatar (shows if player has a hat layer)
-  avatar-overlay: true
-
-# Private Messaging System
-messaging:
-  # Format for the sender
-  sender-format: "&8[&7You &8→ &7{receiver}&8] &f{message}"
-  # Format for the receiver
-  receiver-format: "&8[&7{sender} &8→ &7You&8] &f{message}"
-  # Format for social spy
-  socialspy-format: "&8[&cSPY&8] &7{sender} &8→ &7{receiver}&8: &f{message}"
-  
-  # Command messages
-  error-player-not-found: "&cPlayer not found."
-  error-message-self: "&cYou cannot message yourself."
-  error-no-reply-target: "&cYou have nobody to reply to."
-  error-invalid-usage-msg: "&cUsage: /msg <player> <message>"
-  error-invalid-usage-reply: "&cUsage: /reply <message>"
-  
-  # Social spy messages
-  socialspy-enabled: "&aSocial spy enabled. You will now see private messages."
-  socialspy-disabled: "&cSocial spy disabled. You will no longer see private messages."
-  
-  # Message toggle
-  msgtoggle-enabled: "&aYou are now accepting private messages."
-  msgtoggle-disabled: "&cYou are no longer accepting private messages."
-  error-player-msgtoggle: "&c{player} is not accepting private messages."
-  
-  # Ignore system
-  ignore-added: "&aYou are now ignoring {player}."
-  ignore-removed: "&aYou are no longer ignoring {player}."
-  error-already-ignoring: "&cYou are already ignoring {player}."
-  error-not-ignoring: "&cYou are not ignoring {player}."
-  error-player-ignored: "&c{player} is ignoring you."
-  error-invalid-usage-ignore: "&cUsage: /ignore <add|remove|list> [player]"
-  ignore-list-header: "&6Players you are ignoring:"
-  ignore-list-entry: "&7- {player}"
-  ignore-list-empty: "&7You are not ignoring any players."
 ```
 
-## Console Integration
+### Private Messages Configuration (`privatemessages.yml`)
+```yaml
+# Permission Configuration
+permissions:
+  send: "bmsproxycore.message.send"
+  reply: "bmsproxycore.message.reply"
+  socialspy: "bmsproxycore.message.socialspy"
+  bypass-toggle: "bmsproxycore.message.bypass.toggle"
 
-BMSProxyCore provides full console integration:
-
-- All staff chat messages are logged to the console
-- Console can send staff chat messages using the `/sc` or `/staffchat` command
-- Console messages appear with "Console" as the player and server name
-- Console has full permission for staff chat without needing to toggle it
-
-## Discord Integration
-
-BMSProxyCore includes Discord webhook integration that allows staff chat messages to be sent to a Discord channel:
-
-1. Create a webhook in your Discord server (Server Settings → Integrations → Webhooks → New Webhook)
-2. Copy the webhook URL
-3. Update the `webhook-url` in your config.yml
-4. Set `enabled: true` to enable the Discord integration
-
-The plugin uses [Crafatar](https://crafatar.com) to display player avatars in Discord messages. You can customize:
-- The webhook display name
-- Message format
-- Avatar size
-- Whether to show the player's helmet/hat layer
-
-## Private Messaging System
-
-The private messaging system allows players to communicate privately across all connected servers:
-
-- **Cross-Server Communication**: Send messages to players regardless of which backend server they're on
-- **Tab Completion**: Player names are auto-completed in messaging commands
-- **Reply System**: Easily reply to the last player who messaged you
-- **Social Spy**: Staff can monitor private messages for moderation purposes
-- **Message Toggle**: Players can disable receiving private messages
-- **Ignore System**: Players can ignore messages from specific players
-
-## Installation
-
-1. Download the latest release from the releases page
-2. Place the JAR file in your Velocity proxy's `plugins` directory
-3. Start or restart your Velocity proxy
-4. Edit the configuration file in `plugins/bmsproxycore/config.yml` if desired
-
-## Building from source
-
-```bash
-./gradlew build
+# Message Formatting
+sender-format: "&8[&7You &8→ &7{receiver}&8] &f{message}"
+receiver-format: "&8[&7{sender} &8→ &7You&8] &f{message}"
+socialspy-format: "&8[&cSPY&8] &7{sender} &8→ &7{receiver}&8: &f{message}"
 ```
 
-The compiled JAR file will be available in the `build/libs` directory.
+### Lobby Command Configuration (`lobbycommand.yml`)
+```yaml
+# Permission Configuration
+permissions:
+  use: "bmsproxycore.lobby.use"
+  bypass-cooldown: "bmsproxycore.lobby.cooldown.bypass"
 
-## License
+# Server Configuration
+target-server: "lobby"
+main-command: "lobby"
+aliases: ["hub", "spawn", "main", "l"]
 
-This project is licensed under the MIT License. # BMSProxyCore
-# BMSProxyCore
+# Cooldown System
+cooldown: 3
+cooldown-message: "&cYou must wait {time} seconds before using this command again."
+```
+
+## 🚀 Installation
+
+1. **Download** the latest release from the releases page
+2. **Place** the JAR file in your Velocity `plugins` folder
+3. **Restart** your Velocity proxy server
+4. **Configure** the plugin in `plugins/bmsproxycore/` directory:
+   - Edit `config.yml` to enable/disable modules
+   - Configure individual modules in their respective files
+   - Set up Discord webhooks if desired
+
+## 📋 Requirements
+
+- **Velocity**: 3.3.0 or higher
+- **Java**: 21 or higher
+- **Minecraft**: 1.16+ (for full feature compatibility)
+
+## 🔧 Module Management
+
+### Enable/Disable Modules
+```yaml
+# In config.yml
+modules:
+  staffchat:
+    enabled: true    # Enable staff chat
+  private_messages:
+    enabled: false   # Disable private messages
+  lobby_command:
+    enabled: true    # Enable lobby commands
+```
+
+### Dynamic Reloading
+Use `/bmsproxycore reload` to:
+- Reload all configuration files
+- Enable/disable modules without restart
+- Apply permission changes
+- Update message formats
+
+## 🎯 Use Cases
+
+### For Large Networks
+- **Staff Coordination**: Cross-server staff communication
+- **Moderation**: Social spy for monitoring player interactions
+- **Quick Navigation**: Lobby commands for staff efficiency
+
+### For Small Servers
+- **Simple Setup**: Enable only needed modules
+- **Lightweight**: Minimal resource usage
+- **Customizable**: Adapt to your server's needs
+
+## 🔒 Security Features
+
+- **Permission-based access control**
+- **Configurable permission nodes**
+- **Bypass permissions for staff**
+- **Module isolation**
+- **Input validation and sanitization**
+
+## 📞 Support
+
+- **Issues**: Report bugs on GitHub Issues
+- **Documentation**: Check the wiki for detailed guides
+- **Community**: Join our Discord for support and updates
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+**Made with ❤️ for the Minecraft community**
