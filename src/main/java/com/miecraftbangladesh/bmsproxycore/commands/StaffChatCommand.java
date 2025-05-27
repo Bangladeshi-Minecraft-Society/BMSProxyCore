@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 public class StaffChatCommand implements SimpleCommand {
 
     private final BMSProxyCore plugin;
-    private static final String PERMISSION = "bmsproxycore.staffchat.use";
 
     public StaffChatCommand(BMSProxyCore plugin) {
         this.plugin = plugin;
@@ -25,6 +24,12 @@ public class StaffChatCommand implements SimpleCommand {
         CommandSource source = invocation.source();
         String[] args = invocation.arguments();
 
+        // Check if Staff Chat module is enabled
+        if (!plugin.isStaffChatModuleEnabled()) {
+            source.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getModuleDisabledMessage()));
+            return;
+        }
+
         // Check if the source is a player or console
         if (!(source instanceof Player) && !(source instanceof ConsoleCommandSource)) {
             source.sendMessage(MessageUtils.formatMessage("&cThis command can only be executed by a player or the console."));
@@ -32,7 +37,8 @@ public class StaffChatCommand implements SimpleCommand {
         }
 
         // Check permissions for players
-        if (source instanceof Player && !source.hasPermission(PERMISSION)) {
+        String usePermission = plugin.getConfigManager().getStaffChatUsePermission();
+        if (source instanceof Player && !usePermission.isEmpty() && !source.hasPermission(usePermission)) {
             source.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getNoPermissionMessage()));
             return;
         }
@@ -47,40 +53,38 @@ public class StaffChatCommand implements SimpleCommand {
 
         if (source instanceof Player) {
             Player player = (Player) source;
-            
+
             // Format and broadcast the message for a player
             Component formattedMessage = MessageUtils.formatStaffChatMessage(
-                player, 
-                message, 
-                plugin.getConfigManager(), 
+                player,
+                message,
+                plugin.getConfigManager(),
                 plugin.getServer()
             );
-            
+
             // Broadcast to all staff members
-            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, PERMISSION);
-            
+            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, usePermission);
+
             // Send to Discord webhook if enabled
             plugin.sendStaffChatMessage(player, message);
-            
+
             // Log to console with proper formatting
             plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         } else {
-            // It's the console sending a message
-            String serverName = "Console";
-            String consoleName = "Console";
-            
+
             // Format and broadcast console message
             Component formattedMessage = MessageUtils.formatConsoleStaffChatMessage(
                 message,
                 plugin.getConfigManager()
             );
-            
+
             // Broadcast to all staff members
-            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, PERMISSION);
-            
+            String staffPermission = plugin.getConfigManager().getStaffChatUsePermission();
+            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, staffPermission);
+
             // Send to Discord if enabled
             plugin.sendConsoleStaffChatMessage(message);
-            
+
             // Log to console with proper formatting
             plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         }
@@ -97,6 +101,7 @@ public class StaffChatCommand implements SimpleCommand {
         if (invocation.source() instanceof ConsoleCommandSource) {
             return true;
         }
-        return invocation.source().hasPermission(PERMISSION);
+        String usePermission = plugin.getConfigManager().getStaffChatUsePermission();
+        return usePermission.isEmpty() || invocation.source().hasPermission(usePermission);
     }
-} 
+}

@@ -1,0 +1,50 @@
+# Lobby Command Module Configuration
+# This file contains all settings related to the lobby teleport functionality
+
+# Server Configuration
+# The server name that players will be sent to when using lobby commands
+# This must match exactly with a server name in your Velocity configuration
+target-server: "lobby"
+
+# Command Configuration
+# Main command name (without the /)
+main-command: "lobby"
+
+# Command aliases (without the /)
+# Players can use any of these commands to teleport to the lobby
+aliases:
+  - "hub"
+  - "spawn"
+  - "main"
+  - "l"
+
+# Permission Configuration
+permissions:
+  # Permission required to use the lobby command
+  # Set to empty string ("") to allow all players
+  use: "bmsproxycore.lobby.use"
+  # Permission to bypass cooldown
+  bypass-cooldown: "bmsproxycore.lobby.cooldown.bypass"
+
+# Messages Configuration
+# Message sent when player successfully teleports to lobby
+success-message: "&aTeleporting to lobby..."
+
+# Message sent when player is already on the target server
+already-on-server-message: "&eYou are already on the lobby server!"
+
+# Message sent when the target server is not found or offline
+server-not-found-message: "&cLobby server is currently unavailable. Please try again later."
+
+# Message sent when teleportation fails for any other reason
+teleport-failed-message: "&cFailed to teleport to lobby. Please try again."
+
+# Message sent when player doesn't have permission
+no-permission-message: "&cYou don't have permission to use this command."
+
+# Cooldown Configuration (in seconds)
+# Set to 0 to disable cooldown
+cooldown: 3
+
+# Message sent when player is on cooldown
+cooldown-message: "&cYou must wait {time} seconds before using this command again."

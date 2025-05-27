@@ -1,0 +1,45 @@
+# Staff Chat Module Configuration
+# This file contains all settings related to the staff chat functionality
+
+# Permission Configuration
+permissions:
+  # Permission to use staff chat commands and see staff messages
+  use: "bmsproxycore.staffchat.use"
+  # Permission to toggle staff chat mode
+  toggle: "bmsproxycore.staffchat.toggle"
+  # Permission to reload staff chat configuration
+  reload: "bmsproxycore.staffchat.reload"
+  # Permission to see staff activity notifications (join/leave/server switch)
+  activity: "bmsproxycore.staffchat.activity"
+
+# Staff chat message formatting
+staffchat-prefix: "&b&lStaff &8|"
+message-format: "{prefix} &7[{server}] &f{player} &8»&r {message}"
+
+# Staff activity message formatting
+server-switch-format: "{prefix} &e{player} &7switched from &6{from_server} &7to &6{to_server}"
+connect-format: "{prefix} &e{player} &ajoined &7the network"
+disconnect-format: "{prefix} &e{player} &cleft &7the network"
+
+# Toggle command messages
+toggle-on-message: "&aStaff chat mode &eenabled&a. Your messages will now go to staff chat."
+toggle-off-message: "&aStaff chat mode &cdisabled&a. Your messages will now go to public chat."
+
+# Discord Webhook Integration
+discord:
+  enabled: false
+  webhook-url: "https://discord.com/api/webhooks/your-webhook-url-here"
+  webhook-name: "Staff Chat"
+  message-format: "**[{server}] {player}**: {message}"
+
+  # Staff activity message formats for Discord
+  server-switch-format: "**{player}** switched from **{from_server}** to **{to_server}**"
+  connect-format: "**{player}** joined the network"
+  disconnect-format: "**{player}** left the network"
+
+  # Use Crafatar for avatars - set to false to use webhook default avatar
+  use-player-avatar: true
+  # Show player avatars using Crafatar (https://crafatar.com)
+  avatar-size: 128
+  # Apply the helmet overlay to the avatar (shows if player has a hat layer)
+  avatar-overlay: true

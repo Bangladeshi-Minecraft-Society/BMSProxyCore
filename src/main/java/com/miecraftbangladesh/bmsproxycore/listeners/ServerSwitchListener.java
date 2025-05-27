@@ -14,7 +14,6 @@ import java.util.Optional;
 public class ServerSwitchListener {
 
     private final BMSProxyCore plugin;
-    private static final String PERMISSION = "bmsproxycore.staffchat.use";
 
     public ServerSwitchListener(BMSProxyCore plugin) {
         this.plugin = plugin;
@@ -23,25 +22,31 @@ public class ServerSwitchListener {
     @Subscribe(order = PostOrder.NORMAL)
     public void onServerSwitch(ServerPostConnectEvent event) {
         Player player = event.getPlayer();
-        
-        // Only handle staff members (those with staff chat permission)
-        if (!player.hasPermission(PERMISSION)) {
+
+        // Check if Staff Chat module is enabled
+        if (!plugin.isStaffChatModuleEnabled()) {
             return;
         }
-        
+
+        // Only handle staff members (those with staff activity permission)
+        String activityPermission = plugin.getConfigManager().getStaffChatActivityPermission();
+        if (!activityPermission.isEmpty() && !player.hasPermission(activityPermission)) {
+            return;
+        }
+
         // Get previous server info
         Optional<ServerInfo> previousServer = Optional.ofNullable(event.getPreviousServer())
                 .map(serverConnection -> serverConnection.getServerInfo());
-        
+
         // Get current server info
         Optional<ServerInfo> currentServer = player.getCurrentServer()
                 .map(serverConnection -> serverConnection.getServerInfo());
-        
+
         // Both must exist for a server switch (not for initial join)
         if (previousServer.isPresent() && currentServer.isPresent()) {
             String prevServerName = previousServer.get().getName();
             String currentServerName = currentServer.get().getName();
-            
+
             // Format the server switch message
             Component formattedMessage = MessageUtils.formatStaffServerSwitchMessage(
                 player,
@@ -49,15 +54,15 @@ public class ServerSwitchListener {
                 currentServerName,
                 plugin.getConfigManager()
             );
-            
-            // Broadcast to all staff members
-            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, PERMISSION);
-            
+
+            // Broadcast to all staff members with activity permission
+            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, activityPermission);
+
             // Send to Discord webhook if enabled
             plugin.sendStaffServerSwitchMessage(player, prevServerName, currentServerName);
-            
+
             // Log to console with proper formatting
             plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
         }
     }
-} 
+}

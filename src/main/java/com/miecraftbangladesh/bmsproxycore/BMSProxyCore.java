@@ -49,16 +49,53 @@ public class BMSProxyCore {
         configManager = new ConfigManager(dataDirectory);
         configManager.loadConfig();
 
+        // Always register the main admin command
+        server.getCommandManager().register("bmsproxycore", new BMSProxyCoreCommand(this));
+
+        // Initialize modules based on configuration
+        initializeStaffChatModule();
+        initializePrivateMessagesModule();
+        initializeLobbyCommandModule();
+
+        logger.info("BMSProxyCore has been enabled!");
+    }
+
+    private void initializeStaffChatModule() {
+        if (!configManager.isStaffChatEnabled()) {
+            logger.info("Staff Chat module is disabled in configuration.");
+            return;
+        }
+
+        logger.info("Initializing Staff Chat module...");
+
         // Initialize Discord webhook
         discordWebhook = new DiscordWebhook(this);
-        
-        // Initialize messaging manager
-        messagingManager = new MessagingManager(this);
 
         // Register StaffChat commands
         server.getCommandManager().register("staffchat", new StaffChatCommand(this), "sc");
         server.getCommandManager().register("staffchattoggle", new StaffChatToggleCommand(this), "sctoggle");
-        server.getCommandManager().register("bmsproxycore", new BMSProxyCoreCommand(this));
+
+        // Register StaffChat listeners
+        server.getEventManager().register(this, new ChatListener(this));
+        server.getEventManager().register(this, new DisconnectListener(this));
+
+        // Register staff activity listeners
+        server.getEventManager().register(this, new ServerSwitchListener(this));
+        server.getEventManager().register(this, new ConnectionListener(this));
+
+        logger.info("Staff Chat module initialized successfully.");
+    }
+
+    private void initializePrivateMessagesModule() {
+        if (!configManager.isPrivateMessagesEnabled()) {
+            logger.info("Private Messages module is disabled in configuration.");
+            return;
+        }
+
+        logger.info("Initializing Private Messages module...");
+
+        // Initialize messaging manager
+        messagingManager = new MessagingManager(this);
 
         // Register Messaging commands
         server.getCommandManager().register("msg", new MessageCommand(this), "whisper");
@@ -67,18 +104,30 @@ public class BMSProxyCore {
         server.getCommandManager().register("msgtoggle", new MessageToggleCommand(this));
         server.getCommandManager().register("ignore", new IgnoreCommand(this));
 
-        // Register StaffChat listeners
-        server.getEventManager().register(this, new ChatListener(this));
-        server.getEventManager().register(this, new DisconnectListener(this));
-        
-        // Register staff activity listeners
-        server.getEventManager().register(this, new ServerSwitchListener(this));
-        server.getEventManager().register(this, new ConnectionListener(this));
-        
         // Register Messaging listeners
         server.getEventManager().register(this, new MessagingDisconnectListener(this));
 
-        logger.info("BMSProxyCore has been enabled!");
+        logger.info("Private Messages module initialized successfully.");
+    }
+
+    private void initializeLobbyCommandModule() {
+        if (!configManager.isLobbyCommandEnabled()) {
+            logger.info("Lobby Command module is disabled in configuration.");
+            return;
+        }
+
+        logger.info("Initializing Lobby Command module...");
+
+        // Get command configuration
+        String mainCommand = configManager.getLobbyMainCommand();
+        java.util.List<String> aliases = configManager.getLobbyCommandAliases();
+
+        // Register lobby command with aliases
+        LobbyCommand lobbyCommand = new LobbyCommand(this);
+        server.getCommandManager().register(mainCommand, lobbyCommand, aliases.toArray(new String[0]));
+
+        logger.info("Lobby Command module initialized successfully.");
+        logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
     }
 
     public ProxyServer getServer() {
@@ -96,9 +145,133 @@ public class BMSProxyCore {
     public DiscordWebhook getDiscordWebhook() {
         return discordWebhook;
     }
-    
+
     public MessagingManager getMessagingManager() {
         return messagingManager;
+    }
+
+    public boolean isStaffChatModuleEnabled() {
+        return configManager.isStaffChatEnabled();
+    }
+
+    public boolean isPrivateMessagesModuleEnabled() {
+        return configManager.isPrivateMessagesEnabled();
+    }
+
+    public boolean isLobbyCommandModuleEnabled() {
+        return configManager.isLobbyCommandEnabled();
+    }
+
+    /**
+     * Reload configuration and reinitialize modules as needed
+     * @return ReloadResult containing information about what changed
+     */
+    public ReloadResult reloadConfiguration() {
+        ReloadResult result = new ReloadResult();
+
+        try {
+            // Store current module states
+            boolean wasStaffChatEnabled = configManager.isStaffChatEnabled();
+            boolean wasPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
+            boolean wasLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
+
+            // Reload configuration
+            configManager.loadConfig();
+            result.configReloaded = true;
+
+            // Check for module state changes
+            boolean isStaffChatEnabled = configManager.isStaffChatEnabled();
+            boolean isPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
+            boolean isLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
+
+            // Handle Staff Chat module changes
+            if (wasStaffChatEnabled != isStaffChatEnabled) {
+                if (isStaffChatEnabled) {
+                    initializeStaffChatModule();
+                    result.staffChatEnabled = true;
+                    result.changes.add("Staff Chat module enabled");
+                } else {
+                    shutdownStaffChatModule();
+                    result.staffChatDisabled = true;
+                    result.changes.add("Staff Chat module disabled");
+                }
+            } else if (isStaffChatEnabled) {
+                // Module was already enabled, just reload its configuration
+                result.changes.add("Staff Chat configuration reloaded");
+            }
+
+            // Handle Private Messages module changes
+            if (wasPrivateMessagesEnabled != isPrivateMessagesEnabled) {
+                if (isPrivateMessagesEnabled) {
+                    initializePrivateMessagesModule();
+                    result.privateMessagesEnabled = true;
+                    result.changes.add("Private Messages module enabled");
+                } else {
+                    shutdownPrivateMessagesModule();
+                    result.privateMessagesDisabled = true;
+                    result.changes.add("Private Messages module disabled");
+                }
+            } else if (isPrivateMessagesEnabled) {
+                // Module was already enabled, just reload its configuration
+                result.changes.add("Private Messages configuration reloaded");
+            }
+
+            // Handle Lobby Command module changes
+            if (wasLobbyCommandEnabled != isLobbyCommandEnabled) {
+                if (isLobbyCommandEnabled) {
+                    initializeLobbyCommandModule();
+                    result.changes.add("Lobby Command module enabled");
+                } else {
+                    result.changes.add("Lobby Command module disabled");
+                }
+            } else if (isLobbyCommandEnabled) {
+                // Module was already enabled, just reload its configuration
+                result.changes.add("Lobby Command configuration reloaded");
+            }
+
+            result.success = true;
+
+        } catch (Exception e) {
+            result.success = false;
+            result.error = e.getMessage();
+            logger.error("Failed to reload configuration", e);
+        }
+
+        return result;
+    }
+
+    private void shutdownStaffChatModule() {
+        logger.info("Shutting down Staff Chat module...");
+
+        // Note: Velocity doesn't provide a way to unregister commands or listeners
+        // So we set the references to null and rely on the module enabled checks
+        discordWebhook = null;
+
+        logger.info("Staff Chat module shut down.");
+    }
+
+    private void shutdownPrivateMessagesModule() {
+        logger.info("Shutting down Private Messages module...");
+
+        // Note: Velocity doesn't provide a way to unregister commands or listeners
+        // So we set the references to null and rely on the module enabled checks
+        messagingManager = null;
+
+        logger.info("Private Messages module shut down.");
+    }
+
+    /**
+     * Result class for reload operations
+     */
+    public static class ReloadResult {
+        public boolean success = false;
+        public boolean configReloaded = false;
+        public boolean staffChatEnabled = false;
+        public boolean staffChatDisabled = false;
+        public boolean privateMessagesEnabled = false;
+        public boolean privateMessagesDisabled = false;
+        public String error = null;
+        public java.util.List<String> changes = new java.util.ArrayList<>();
     }
 
     public Set<UUID> getStaffChatToggled() {
@@ -119,11 +292,15 @@ public class BMSProxyCore {
 
     /**
      * Send a message to staff chat from a player
-     * 
+     *
      * @param sender The player who sent the message
      * @param message The message content
      */
     public void sendStaffChatMessage(Player sender, String message) {
+        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+            return;
+        }
+
         // Get the server name
         String serverName = sender.getCurrentServer()
                 .map(serverConnection -> serverConnection.getServerInfo().getName())
@@ -134,51 +311,67 @@ public class BMSProxyCore {
             discordWebhook.sendStaffChatMessage(sender, message, serverName);
         }
     }
-    
+
     /**
      * Send a message to staff chat from the console
-     * 
+     *
      * @param message The message content
      */
     public void sendConsoleStaffChatMessage(String message) {
+        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+            return;
+        }
+
         // Send to Discord if enabled
         if (configManager.isDiscordEnabled()) {
             discordWebhook.sendConsoleStaffChatMessage(message);
         }
     }
-    
+
     /**
      * Send a server switch notification for a staff member
-     * 
+     *
      * @param player The player who switched servers
      * @param fromServer The server the player switched from
      * @param toServer The server the player switched to
      */
     public void sendStaffServerSwitchMessage(Player player, String fromServer, String toServer) {
+        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+            return;
+        }
+
         // Send to Discord if enabled
         if (configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffServerSwitchMessage(player, fromServer, toServer);
         }
     }
-    
+
     /**
      * Send a connection notification for a staff member
-     * 
+     *
      * @param player The player who connected
      */
     public void sendStaffConnectMessage(Player player) {
+        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+            return;
+        }
+
         // Send to Discord if enabled
         if (configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffConnectMessage(player);
         }
     }
-    
+
     /**
      * Send a disconnection notification for a staff member
-     * 
+     *
      * @param player The player who disconnected
      */
     public void sendStaffDisconnectMessage(Player player) {
+        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+            return;
+        }
+
         // Send to Discord if enabled
         if (configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffDisconnectMessage(player);

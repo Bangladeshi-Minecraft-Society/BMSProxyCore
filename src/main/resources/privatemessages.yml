@@ -1,0 +1,54 @@
+# Private Messages Module Configuration
+# This file contains all settings related to the private messaging functionality
+
+# Permission Configuration
+permissions:
+  # Permission to send private messages
+  send: "bmsproxycore.message.send"
+  # Permission to reply to messages
+  reply: "bmsproxycore.message.reply"
+  # Permission to use social spy (see all private messages)
+  socialspy: "bmsproxycore.message.socialspy"
+  # Permission to toggle message acceptance
+  toggle: "bmsproxycore.message.toggle"
+  # Permission to use ignore system
+  ignore: "bmsproxycore.message.ignore"
+  # Permission to bypass message toggle (can message players who disabled messages)
+  bypass-toggle: "bmsproxycore.message.bypass.toggle"
+  # Permission to bypass ignore (can message players who ignored you)
+  bypass-ignore: "bmsproxycore.message.bypass.ignore"
+
+# Message Formatting
+# Format for the sender
+sender-format: "&8[&7You &8→ &7{receiver}&8] &f{message}"
+# Format for the receiver
+receiver-format: "&8[&7{sender} &8→ &7You&8] &f{message}"
+# Format for social spy
+socialspy-format: "&8[&cSPY&8] &7{sender} &8→ &7{receiver}&8: &f{message}"
+
+# Command Error Messages
+error-player-not-found: "&cPlayer not found."
+error-message-self: "&cYou cannot message yourself."
+error-no-reply-target: "&cYou have nobody to reply to."
+error-invalid-usage-msg: "&cUsage: /msg <player> <message>"
+error-invalid-usage-reply: "&cUsage: /reply <message>"
+
+# Social Spy Messages
+socialspy-enabled: "&aSocial spy enabled. You will now see private messages."
+socialspy-disabled: "&cSocial spy disabled. You will no longer see private messages."
+
+# Message Toggle Messages
+msgtoggle-enabled: "&aYou are now accepting private messages."
+msgtoggle-disabled: "&cYou are no longer accepting private messages."
+error-player-msgtoggle: "&c{player} is not accepting private messages."
+
+# Ignore System Messages
+ignore-added: "&aYou are now ignoring {player}."
+ignore-removed: "&aYou are no longer ignoring {player}."
+error-already-ignoring: "&cYou are already ignoring {player}."
+error-not-ignoring: "&cYou are not ignoring {player}."
+error-player-ignored: "&c{player} is ignoring you."
+error-invalid-usage-ignore: "&cUsage: /ignore <add|remove|list> [player]"
+ignore-list-header: "&6Players you are ignoring:"
+ignore-list-entry: "&7- {player}"
+ignore-list-empty: "&7You are not ignoring any players."

@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class MessageCommand implements SimpleCommand {
 
     private final BMSProxyCore plugin;
-    private static final String PERMISSION = "bmsproxycore.message.send";
 
     public MessageCommand(BMSProxyCore plugin) {
         this.plugin = plugin;
@@ -26,6 +25,12 @@ public class MessageCommand implements SimpleCommand {
         CommandSource source = invocation.source();
         String[] args = invocation.arguments();
 
+        // Check if Private Messages module is enabled
+        if (!plugin.isPrivateMessagesModuleEnabled()) {
+            source.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getModuleDisabledMessage()));
+            return;
+        }
+
         if (!(source instanceof Player)) {
             source.sendMessage(MessageUtils.formatMessage("&cThis command can only be executed by a player."));
             return;
@@ -33,7 +38,8 @@ public class MessageCommand implements SimpleCommand {
 
         Player sender = (Player) source;
 
-        if (!sender.hasPermission(PERMISSION)) {
+        String sendPermission = plugin.getConfigManager().getPrivateMessagesSendPermission();
+        if (!sendPermission.isEmpty() && !sender.hasPermission(sendPermission)) {
             sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getNoPermissionMessage()));
             return;
         }
@@ -52,7 +58,7 @@ public class MessageCommand implements SimpleCommand {
         }
 
         Player target = targetOptional.get();
-        
+
         // Build the message from the remaining arguments
         StringBuilder messageBuilder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
@@ -75,7 +81,7 @@ public class MessageCommand implements SimpleCommand {
                     .map(Player::getUsername)
                     .filter(name -> name.toLowerCase().startsWith(partialName))
                     .collect(Collectors.toList());
-            
+
             return CompletableFuture.completedFuture(completions);
         }
 
@@ -84,6 +90,7 @@ public class MessageCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission(PERMISSION);
+        String sendPermission = plugin.getConfigManager().getPrivateMessagesSendPermission();
+        return sendPermission.isEmpty() || invocation.source().hasPermission(sendPermission);
     }
-} 
+}

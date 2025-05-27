@@ -12,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 public class StaffChatToggleCommand implements SimpleCommand {
 
     private final BMSProxyCore plugin;
-    private static final String PERMISSION = "bmsproxycore.staffchat.toggle";
 
     public StaffChatToggleCommand(BMSProxyCore plugin) {
         this.plugin = plugin;
@@ -22,6 +21,12 @@ public class StaffChatToggleCommand implements SimpleCommand {
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
 
+        // Check if Staff Chat module is enabled
+        if (!plugin.isStaffChatModuleEnabled()) {
+            source.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getModuleDisabledMessage()));
+            return;
+        }
+
         if (!(source instanceof Player)) {
             source.sendMessage(MessageUtils.formatMessage("&cThis command can only be executed by a player."));
             return;
@@ -29,14 +34,15 @@ public class StaffChatToggleCommand implements SimpleCommand {
 
         Player player = (Player) source;
 
-        if (!player.hasPermission(PERMISSION)) {
+        String togglePermission = plugin.getConfigManager().getStaffChatTogglePermission();
+        if (!togglePermission.isEmpty() && !player.hasPermission(togglePermission)) {
             player.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getNoPermissionMessage()));
             return;
         }
 
         // Toggle staff chat mode
         plugin.toggleStaffChat(player.getUniqueId());
-        
+
         // Send appropriate message based on new toggle state
         if (plugin.isStaffChatToggled(player.getUniqueId())) {
             player.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getToggleOnMessage()));
@@ -52,6 +58,7 @@ public class StaffChatToggleCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission(PERMISSION);
+        String togglePermission = plugin.getConfigManager().getStaffChatTogglePermission();
+        return togglePermission.isEmpty() || invocation.source().hasPermission(togglePermission);
     }
-} 
+}
