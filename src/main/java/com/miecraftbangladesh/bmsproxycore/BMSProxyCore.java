@@ -50,7 +50,12 @@ public class BMSProxyCore {
         configManager.loadConfig();
 
         // Always register the main admin command
-        server.getCommandManager().register("bmsproxycore", new BMSProxyCoreCommand(this));
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("bmsproxycore")
+                .plugin(this)
+                .build(),
+            new BMSProxyCoreCommand(this)
+        );
 
         // Initialize modules based on configuration
         initializeStaffChatModule();
@@ -73,8 +78,20 @@ public class BMSProxyCore {
         discordWebhook = new DiscordWebhook(this);
 
         // Register StaffChat commands
-        server.getCommandManager().register("staffchat", new StaffChatCommand(this), "sc");
-        server.getCommandManager().register("staffchattoggle", new StaffChatToggleCommand(this), "sctoggle");
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("staffchat")
+                .aliases("sc")
+                .plugin(this)
+                .build(),
+            new StaffChatCommand(this)
+        );
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("staffchattoggle")
+                .aliases("sctoggle")
+                .plugin(this)
+                .build(),
+            new StaffChatToggleCommand(this)
+        );
 
         // Register StaffChat listeners
         server.getEventManager().register(this, new ChatListener(this));
@@ -99,11 +116,38 @@ public class BMSProxyCore {
         messagingManager = new MessagingManager(this);
 
         // Register Messaging commands
-        server.getCommandManager().register("msg", new MessageCommand(this), "whisper");
-        server.getCommandManager().register("reply", new ReplyCommand(this), "r");
-        server.getCommandManager().register("socialspy", new SocialSpyCommand(this));
-        server.getCommandManager().register("msgtoggle", new MessageToggleCommand(this));
-        server.getCommandManager().register("ignore", new IgnoreCommand(this));
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("msg")
+                .aliases("whisper")
+                .plugin(this)
+                .build(),
+            new MessageCommand(this)
+        );
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("reply")
+                .aliases("r")
+                .plugin(this)
+                .build(),
+            new ReplyCommand(this)
+        );
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("socialspy")
+                .plugin(this)
+                .build(),
+            new SocialSpyCommand(this)
+        );
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("msgtoggle")
+                .plugin(this)
+                .build(),
+            new MessageToggleCommand(this)
+        );
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("ignore")
+                .plugin(this)
+                .build(),
+            new IgnoreCommand(this)
+        );
 
         // Register Messaging listeners
         server.getEventManager().register(this, new MessagingDisconnectListener(this));
@@ -125,7 +169,13 @@ public class BMSProxyCore {
 
         // Register lobby command with aliases
         LobbyCommand lobbyCommand = new LobbyCommand(this);
-        server.getCommandManager().register(mainCommand, lobbyCommand, aliases.toArray(new String[0]));
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder(mainCommand)
+                .aliases(aliases.toArray(new String[0]))
+                .plugin(this)
+                .build(),
+            lobbyCommand
+        );
 
         logger.info("Lobby Command module initialized successfully.");
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
@@ -145,7 +195,13 @@ public class BMSProxyCore {
 
         // Register announcement command with aliases
         AnnouncementCommand announcementCommand = new AnnouncementCommand(this);
-        server.getCommandManager().register(mainCommand, announcementCommand, aliases.toArray(new String[0]));
+        server.getCommandManager().register(
+            server.getCommandManager().metaBuilder(mainCommand)
+                .aliases(aliases.toArray(new String[0]))
+                .plugin(this)
+                .build(),
+            announcementCommand
+        );
 
         logger.info("Announcement module initialized successfully.");
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);

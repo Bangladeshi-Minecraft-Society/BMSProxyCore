@@ -1,12 +1,10 @@
 package com.miecraftbangladesh.bmsproxycore.utils;
 
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.DumperOptions;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -123,46 +121,54 @@ public class ConfigManager {
     }
 
     // Module enable/disable methods
+    @SuppressWarnings("unchecked")
     public boolean isStaffChatEnabled() {
         Map<String, Object> modulesSection = getSection("modules");
         if (modulesSection == null) return true; // Default to enabled if no modules section
 
-        Map<String, Object> staffChatSection = (Map<String, Object>) modulesSection.get("staffchat");
-        if (staffChatSection == null) return true; // Default to enabled if no staffchat section
+        Object staffChatObj = modulesSection.get("staffchat");
+        if (!(staffChatObj instanceof Map)) return true; // Default to enabled if no staffchat section
 
+        Map<String, Object> staffChatSection = (Map<String, Object>) staffChatObj;
         Object enabled = staffChatSection.get("enabled");
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
 
+    @SuppressWarnings("unchecked")
     public boolean isPrivateMessagesEnabled() {
         Map<String, Object> modulesSection = getSection("modules");
         if (modulesSection == null) return true; // Default to enabled if no modules section
 
-        Map<String, Object> privateMessagesSection = (Map<String, Object>) modulesSection.get("private_messages");
-        if (privateMessagesSection == null) return true; // Default to enabled if no private_messages section
+        Object privateMessagesObj = modulesSection.get("private_messages");
+        if (!(privateMessagesObj instanceof Map)) return true; // Default to enabled if no private_messages section
 
+        Map<String, Object> privateMessagesSection = (Map<String, Object>) privateMessagesObj;
         Object enabled = privateMessagesSection.get("enabled");
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
 
+    @SuppressWarnings("unchecked")
     public boolean isLobbyCommandEnabled() {
         Map<String, Object> modulesSection = getSection("modules");
         if (modulesSection == null) return true; // Default to enabled if no modules section
 
-        Map<String, Object> lobbyCommandSection = (Map<String, Object>) modulesSection.get("lobby_command");
-        if (lobbyCommandSection == null) return true; // Default to enabled if no lobby_command section
+        Object lobbyCommandObj = modulesSection.get("lobby_command");
+        if (!(lobbyCommandObj instanceof Map)) return true; // Default to enabled if no lobby_command section
 
+        Map<String, Object> lobbyCommandSection = (Map<String, Object>) lobbyCommandObj;
         Object enabled = lobbyCommandSection.get("enabled");
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
 
+    @SuppressWarnings("unchecked")
     public boolean isAnnouncementEnabled() {
         Map<String, Object> modulesSection = getSection("modules");
         if (modulesSection == null) return true; // Default to enabled if no modules section
 
-        Map<String, Object> announcementSection = (Map<String, Object>) modulesSection.get("announcement");
-        if (announcementSection == null) return true; // Default to enabled if no announcement section
+        Object announcementObj = modulesSection.get("announcement");
+        if (!(announcementObj instanceof Map)) return true; // Default to enabled if no announcement section
 
+        Map<String, Object> announcementSection = (Map<String, Object>) announcementObj;
         Object enabled = announcementSection.get("enabled");
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
@@ -275,20 +281,7 @@ public class ConfigManager {
         }
     }
 
-    private void saveConfig() {
-        try {
-            DumperOptions options = new DumperOptions();
-            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-            options.setPrettyFlow(true);
 
-            Yaml yaml = new Yaml(options);
-            try (FileWriter writer = new FileWriter(configFile.toFile())) {
-                yaml.dump(config, writer);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public String getString(String path, String defaultValue) {
         Object value = config.get(path);
@@ -740,26 +733,7 @@ public class ConfigManager {
         return value instanceof String ? (String) value : defaultValue;
     }
 
-    private boolean getAnnouncementBoolean(String path, boolean defaultValue) {
-        if (!isAnnouncementEnabled()) return defaultValue;
-        Object value = announcementConfig.get(path);
-        return value instanceof Boolean ? (Boolean) value : defaultValue;
-    }
 
-    private int getAnnouncementInt(String path, int defaultValue) {
-        if (!isAnnouncementEnabled()) return defaultValue;
-        Object value = announcementConfig.get(path);
-        if (value instanceof Integer) {
-            return (Integer) value;
-        } else if (value instanceof String) {
-            try {
-                return Integer.parseInt((String) value);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
-        return defaultValue;
-    }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getAnnouncementSection(String path) {
@@ -784,22 +758,7 @@ public class ConfigManager {
         return value instanceof Boolean ? (Boolean) value : defaultValue;
     }
 
-    private int getAnnouncementNestedInt(String section, String path, int defaultValue) {
-        if (!isAnnouncementEnabled()) return defaultValue;
-        Map<String, Object> sectionMap = getAnnouncementSection(section);
-        if (sectionMap == null) return defaultValue;
-        Object value = sectionMap.get(path);
-        if (value instanceof Integer) {
-            return (Integer) value;
-        } else if (value instanceof String) {
-            try {
-                return Integer.parseInt((String) value);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
-        return defaultValue;
-    }
+
 
     @SuppressWarnings("unchecked")
     private java.util.List<String> getAnnouncementStringList(String path, java.util.List<String> defaultValue) {
@@ -833,10 +792,13 @@ public class ConfigManager {
         return getAnnouncementNestedString("title", "subtitle", "&f{announcement}");
     }
 
+    @SuppressWarnings("unchecked")
     public int getAnnouncementTitleFadeIn() {
         Map<String, Object> titleSection = getAnnouncementSection("title");
-        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
-        if (timingSection == null) return 10;
+        Object timingObj = titleSection.get("timing");
+        if (!(timingObj instanceof Map)) return 10;
+
+        Map<String, Object> timingSection = (Map<String, Object>) timingObj;
         Object value = timingSection.get("fade-in");
         if (value instanceof Integer) {
             return (Integer) value;
@@ -850,10 +812,13 @@ public class ConfigManager {
         return 10;
     }
 
+    @SuppressWarnings("unchecked")
     public int getAnnouncementTitleStay() {
         Map<String, Object> titleSection = getAnnouncementSection("title");
-        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
-        if (timingSection == null) return 60;
+        Object timingObj = titleSection.get("timing");
+        if (!(timingObj instanceof Map)) return 60;
+
+        Map<String, Object> timingSection = (Map<String, Object>) timingObj;
         Object value = timingSection.get("stay");
         if (value instanceof Integer) {
             return (Integer) value;
@@ -867,10 +832,13 @@ public class ConfigManager {
         return 60;
     }
 
+    @SuppressWarnings("unchecked")
     public int getAnnouncementTitleFadeOut() {
         Map<String, Object> titleSection = getAnnouncementSection("title");
-        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
-        if (timingSection == null) return 10;
+        Object timingObj = titleSection.get("timing");
+        if (!(timingObj instanceof Map)) return 10;
+
+        Map<String, Object> timingSection = (Map<String, Object>) timingObj;
         Object value = timingSection.get("fade-out");
         if (value instanceof Integer) {
             return (Integer) value;
