@@ -3,7 +3,7 @@
   "name": "BMSProxyCore",
   "version": "1.0.0",
   "description": "A staff chat system for Velocity proxies",
-  "authors": ["MieCraftBangladesh"],
-  "main": "com.miecraftbangladesh.bmsproxycore.BMSProxyCore",
+  "authors": ["MinecraftBangladesh"],
+  "main": "com.minecraftbangladesh.bmsproxycore.BMSProxyCore",
   "dependencies": []
 } 

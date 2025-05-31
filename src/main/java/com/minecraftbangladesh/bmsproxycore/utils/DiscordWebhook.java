@@ -1,6 +1,6 @@
-package com.miecraftbangladesh.bmsproxycore.utils;
+package com.minecraftbangladesh.bmsproxycore.utils;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.minecraftbangladesh.bmsproxycore.BMSProxyCore;
 import com.velocitypowered.api.proxy.Player;
 import okhttp3.*;
 import org.json.JSONObject;

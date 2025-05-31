@@ -1,7 +1,7 @@
-package com.miecraftbangladesh.bmsproxycore.listeners;
+package com.minecraftbangladesh.bmsproxycore.listeners;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
-import com.miecraftbangladesh.bmsproxycore.utils.MessageUtils;
+import com.minecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.minecraftbangladesh.bmsproxycore.utils.MessageUtils;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;

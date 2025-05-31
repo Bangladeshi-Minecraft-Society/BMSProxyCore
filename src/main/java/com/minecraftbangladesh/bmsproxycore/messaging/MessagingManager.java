@@ -1,7 +1,7 @@
-package com.miecraftbangladesh.bmsproxycore.messaging;
+package com.minecraftbangladesh.bmsproxycore.messaging;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
-import com.miecraftbangladesh.bmsproxycore.utils.MessageUtils;
+import com.minecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.minecraftbangladesh.bmsproxycore.utils.MessageUtils;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 

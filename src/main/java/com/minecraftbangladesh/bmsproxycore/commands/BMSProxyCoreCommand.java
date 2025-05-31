@@ -1,7 +1,7 @@
-package com.miecraftbangladesh.bmsproxycore.commands;
+package com.minecraftbangladesh.bmsproxycore.commands;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
-import com.miecraftbangladesh.bmsproxycore.utils.MessageUtils;
+import com.minecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.minecraftbangladesh.bmsproxycore.utils.MessageUtils;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 

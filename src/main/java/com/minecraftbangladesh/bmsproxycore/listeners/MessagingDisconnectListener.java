@@ -1,16 +1,16 @@
-package com.miecraftbangladesh.bmsproxycore.listeners;
+package com.minecraftbangladesh.bmsproxycore.listeners;
 
-import com.miecraftbangladesh.bmsproxycore.BMSProxyCore;
+import com.minecraftbangladesh.bmsproxycore.BMSProxyCore;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
-public class DisconnectListener {
+public class MessagingDisconnectListener {
 
     private final BMSProxyCore plugin;
 
-    public DisconnectListener(BMSProxyCore plugin) {
+    public MessagingDisconnectListener(BMSProxyCore plugin) {
         this.plugin = plugin;
     }
 
@@ -18,9 +18,7 @@ public class DisconnectListener {
     public void onPlayerDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         
-        // Remove player from staff chat toggle list when they disconnect
-        if (plugin.isStaffChatToggled(player.getUniqueId())) {
-            plugin.getStaffChatToggled().remove(player.getUniqueId());
-        }
+        // Remove player data from messaging manager
+        plugin.getMessagingManager().handlePlayerDisconnect(player.getUniqueId());
     }
 } 

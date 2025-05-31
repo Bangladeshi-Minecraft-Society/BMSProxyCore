@@ -1,4 +1,4 @@
-package com.miecraftbangladesh.bmsproxycore.utils;
+package com.minecraftbangladesh.bmsproxycore.utils;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;

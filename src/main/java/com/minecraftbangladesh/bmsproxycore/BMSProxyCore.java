@@ -1,11 +1,11 @@
-package com.miecraftbangladesh.bmsproxycore;
+package com.minecraftbangladesh.bmsproxycore;
 
 import com.google.inject.Inject;
-import com.miecraftbangladesh.bmsproxycore.commands.*;
-import com.miecraftbangladesh.bmsproxycore.listeners.*;
-import com.miecraftbangladesh.bmsproxycore.messaging.MessagingManager;
-import com.miecraftbangladesh.bmsproxycore.utils.ConfigManager;
-import com.miecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
+import com.minecraftbangladesh.bmsproxycore.commands.*;
+import com.minecraftbangladesh.bmsproxycore.listeners.*;
+import com.minecraftbangladesh.bmsproxycore.messaging.MessagingManager;
+import com.minecraftbangladesh.bmsproxycore.utils.ConfigManager;
+import com.minecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
@@ -24,7 +24,7 @@ import java.util.UUID;
         name = "BMSProxyCore",
         version = "1.0.0",
         description = "A staff chat system for Velocity proxies",
-        authors = {"MieCraftBangladesh"}
+        authors = {"MinecraftBangladesh"}
 )
 public class BMSProxyCore {
 
