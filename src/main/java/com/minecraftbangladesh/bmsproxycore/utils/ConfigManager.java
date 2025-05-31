@@ -18,26 +18,30 @@ public class ConfigManager {
     private final Path privateMessagesConfigFile;
     private final Path lobbyCommandConfigFile;
     private final Path announcementConfigFile;
+    private final Path chatControlConfigFile;
 
     private Map<String, Object> config;
     private Map<String, Object> staffChatConfig;
     private Map<String, Object> privateMessagesConfig;
     private Map<String, Object> lobbyCommandConfig;
     private Map<String, Object> announcementConfig;
+    private Map<String, Object> chatControlConfig;
 
     public ConfigManager(Path dataDirectory) {
         this.dataDirectory = dataDirectory;
         this.configFile = dataDirectory.resolve("config.yml");
-        this.staffChatConfigFile = dataDirectory.resolve("staffchat.yml");
-        this.privateMessagesConfigFile = dataDirectory.resolve("privatemessages.yml");
-        this.lobbyCommandConfigFile = dataDirectory.resolve("lobbycommand.yml");
-        this.announcementConfigFile = dataDirectory.resolve("announcement.yml");
+        this.staffChatConfigFile = dataDirectory.resolve("modules").resolve("staffchat.yml");
+        this.privateMessagesConfigFile = dataDirectory.resolve("modules").resolve("privatemessages.yml");
+        this.lobbyCommandConfigFile = dataDirectory.resolve("modules").resolve("lobbycommand.yml");
+        this.announcementConfigFile = dataDirectory.resolve("modules").resolve("announcement.yml");
+        this.chatControlConfigFile = dataDirectory.resolve("modules").resolve("chatcontrol.yml");
 
         this.config = new HashMap<>();
         this.staffChatConfig = new HashMap<>();
         this.privateMessagesConfig = new HashMap<>();
         this.lobbyCommandConfig = new HashMap<>();
         this.announcementConfig = new HashMap<>();
+        this.chatControlConfig = new HashMap<>();
     }
 
     public void loadConfig() {
@@ -67,6 +71,10 @@ public class ConfigManager {
                 loadAnnouncementConfig();
             }
 
+            if (isChatControlEnabled()) {
+                loadChatControlConfig();
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,6 +97,12 @@ public class ConfigManager {
     }
 
     private void loadStaffChatConfig() throws IOException {
+        // Create modules directory if it doesn't exist
+        Path modulesDir = dataDirectory.resolve("modules");
+        if (!Files.exists(modulesDir)) {
+            Files.createDirectories(modulesDir);
+        }
+
         // Create staff chat config file if it doesn't exist
         if (!Files.exists(staffChatConfigFile)) {
             saveDefaultStaffChatConfig();
@@ -105,6 +119,12 @@ public class ConfigManager {
     }
 
     private void loadPrivateMessagesConfig() throws IOException {
+        // Create modules directory if it doesn't exist
+        Path modulesDir = dataDirectory.resolve("modules");
+        if (!Files.exists(modulesDir)) {
+            Files.createDirectories(modulesDir);
+        }
+
         // Create private messages config file if it doesn't exist
         if (!Files.exists(privateMessagesConfigFile)) {
             saveDefaultPrivateMessagesConfig();
@@ -173,9 +193,22 @@ public class ConfigManager {
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
 
+    @SuppressWarnings("unchecked")
+    public boolean isChatControlEnabled() {
+        Map<String, Object> modulesSection = getSection("modules");
+        if (modulesSection == null) return true; // Default to enabled if no modules section
+
+        Object chatControlObj = modulesSection.get("chatcontrol");
+        if (!(chatControlObj instanceof Map)) return true; // Default to enabled if no chatcontrol section
+
+        Map<String, Object> chatControlSection = (Map<String, Object>) chatControlObj;
+        Object enabled = chatControlSection.get("enabled");
+        return enabled instanceof Boolean ? (Boolean) enabled : true;
+    }
+
     // Save default configuration files
     private void saveDefaultStaffChatConfig() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("staffchat.yml");
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("modules/staffchat.yml");
              OutputStream outputStream = Files.newOutputStream(staffChatConfigFile)) {
             if (inputStream != null) {
                 byte[] buffer = new byte[1024];
@@ -190,7 +223,7 @@ public class ConfigManager {
     }
 
     private void saveDefaultPrivateMessagesConfig() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("privatemessages.yml");
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("modules/privatemessages.yml");
              OutputStream outputStream = Files.newOutputStream(privateMessagesConfigFile)) {
             if (inputStream != null) {
                 byte[] buffer = new byte[1024];
@@ -205,6 +238,12 @@ public class ConfigManager {
     }
 
     private void loadLobbyCommandConfig() throws IOException {
+        // Create modules directory if it doesn't exist
+        Path modulesDir = dataDirectory.resolve("modules");
+        if (!Files.exists(modulesDir)) {
+            Files.createDirectories(modulesDir);
+        }
+
         // Create lobby command config file if it doesn't exist
         if (!Files.exists(lobbyCommandConfigFile)) {
             saveDefaultLobbyCommandConfig();
@@ -221,6 +260,12 @@ public class ConfigManager {
     }
 
     private void loadAnnouncementConfig() throws IOException {
+        // Create modules directory if it doesn't exist
+        Path modulesDir = dataDirectory.resolve("modules");
+        if (!Files.exists(modulesDir)) {
+            Files.createDirectories(modulesDir);
+        }
+
         // Create announcement config file if it doesn't exist
         if (!Files.exists(announcementConfigFile)) {
             saveDefaultAnnouncementConfig();
@@ -236,8 +281,30 @@ public class ConfigManager {
         }
     }
 
+    private void loadChatControlConfig() throws IOException {
+        // Create modules directory if it doesn't exist
+        Path modulesDir = dataDirectory.resolve("modules");
+        if (!Files.exists(modulesDir)) {
+            Files.createDirectories(modulesDir);
+        }
+
+        // Create chat control config file if it doesn't exist
+        if (!Files.exists(chatControlConfigFile)) {
+            saveDefaultChatControlConfig();
+        }
+
+        // Load chat control config from file
+        try (InputStream inputStream = Files.newInputStream(chatControlConfigFile)) {
+            Yaml yaml = new Yaml();
+            chatControlConfig = yaml.load(inputStream);
+            if (chatControlConfig == null) {
+                chatControlConfig = new HashMap<>();
+            }
+        }
+    }
+
     private void saveDefaultLobbyCommandConfig() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("lobbycommand.yml");
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("modules/lobbycommand.yml");
              OutputStream outputStream = Files.newOutputStream(lobbyCommandConfigFile)) {
             if (inputStream != null) {
                 byte[] buffer = new byte[1024];
@@ -252,8 +319,23 @@ public class ConfigManager {
     }
 
     private void saveDefaultAnnouncementConfig() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("announcement.yml");
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("modules/announcement.yml");
              OutputStream outputStream = Files.newOutputStream(announcementConfigFile)) {
+            if (inputStream != null) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveDefaultChatControlConfig() {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("modules/chatcontrol.yml");
+             OutputStream outputStream = Files.newOutputStream(chatControlConfigFile)) {
             if (inputStream != null) {
                 byte[] buffer = new byte[1024];
                 int length;
@@ -894,5 +976,321 @@ public class ConfigManager {
 
     public String getAnnouncementConsoleUsageMessage() {
         return getAnnouncementString("console-usage-message", "&7Usage: /{command} <message> - Send an announcement to all players");
+    }
+
+    // Chat Control Configuration Methods
+    // Helper methods for accessing chat control configuration
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getChatControlSection(String path) {
+        if (!isChatControlEnabled()) return new HashMap<>();
+        Object value = chatControlConfig.get(path);
+        return value instanceof Map ? (Map<String, Object>) value : new HashMap<>();
+    }
+
+    private String getChatControlNestedString(String section, String path, String defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    private String getChatControlDoubleNestedString(String section, String subsection, String path, String defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    private int getChatControlNestedInt(String section, String path, int defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof Integer ? (Integer) value : defaultValue;
+    }
+
+    private boolean getChatControlNestedBoolean(String section, String path, boolean defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof Boolean ? (Boolean) value : defaultValue;
+    }
+
+    // Component enable/disable methods
+    public boolean isChatFilterEnabled() {
+        return getChatControlNestedBoolean("components", "filter", true) &&
+               getChatControlNestedBoolean("components", "enabled", true);
+    }
+
+    public boolean isChatCooldownEnabled() {
+        return getChatControlNestedBoolean("components", "cooldown", true) &&
+               getChatControlNestedBoolean("components", "enabled", true);
+    }
+
+    // Permission methods
+    public String getChatFilterManagePermission() {
+        return getChatControlDoubleNestedString("permissions", "filter", "manage", "bmsproxycore.chatcontrol.filter.manage");
+    }
+
+    public String getChatFilterBypassPermission() {
+        return getChatControlDoubleNestedString("permissions", "filter", "bypass", "bmsproxycore.chatcontrol.filter.bypass");
+    }
+
+    public String getChatFilterReloadPermission() {
+        return getChatControlDoubleNestedString("permissions", "filter", "reload", "bmsproxycore.chatcontrol.filter.reload");
+    }
+
+    public String getChatCooldownManagePermission() {
+        return getChatControlDoubleNestedString("permissions", "cooldown", "manage", "bmsproxycore.chatcontrol.cooldown.manage");
+    }
+
+    public String getChatCooldownBypassPermission() {
+        return getChatControlDoubleNestedString("permissions", "cooldown", "bypass", "bmsproxycore.chatcontrol.cooldown.bypass");
+    }
+
+    public String getChatCooldownReloadPermission() {
+        return getChatControlDoubleNestedString("permissions", "cooldown", "reload", "bmsproxycore.chatcontrol.cooldown.reload");
+    }
+
+    // Chat Filter Configuration
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getChatFilterRules() {
+        Map<String, Object> filterSection = getChatControlSection("filter");
+        Object rulesObj = filterSection.get("rules");
+        if (rulesObj instanceof java.util.List) {
+            return (java.util.List<String>) rulesObj;
+        }
+        return new java.util.ArrayList<>();
+    }
+
+    public String getChatFilterAction() {
+        return getChatControlNestedString("filter", "action", "warn");
+    }
+
+    public String getChatFilterBlockedMessage() {
+        return getChatControlNestedString("filter", "blocked-message", "&cYour message was blocked by the chat filter.");
+    }
+
+    public String getChatFilterReplacementText() {
+        return getChatControlNestedString("filter", "replacement-text", "***");
+    }
+
+    public boolean isChatFilterLogEnabled() {
+        return getChatControlNestedBoolean("filter", "log-filtered", true);
+    }
+
+    public String getChatFilterLogFormat() {
+        return getChatControlNestedString("filter", "log-format", "[ChatFilter] {player} attempted to send: {message}");
+    }
+
+    public boolean isChatFilterCaseSensitive() {
+        return getChatControlNestedBoolean("advanced", "case-sensitive", false);
+    }
+
+    // Chat Cooldown Configuration
+    public int getChatCooldownDuration() {
+        return getChatControlNestedInt("cooldown", "duration", 3);
+    }
+
+    public String getChatCooldownMessage() {
+        return getChatControlNestedString("cooldown", "cooldown-message", "&cYou must wait {time} seconds before sending another message.");
+    }
+
+    public boolean isChatCooldownPermissionBasedEnabled() {
+        return getChatControlNestedBoolean("cooldown", "permission-based", "enabled", false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Integer> getChatCooldownPermissionDurations() {
+        if (!isChatControlEnabled()) return new java.util.HashMap<>();
+
+        Map<String, Object> cooldownSection = getChatControlSection("cooldown");
+        Object permissionBasedObj = cooldownSection.get("permission-based");
+        if (!(permissionBasedObj instanceof Map)) return new java.util.HashMap<>();
+
+        Map<String, Object> permissionBasedSection = (Map<String, Object>) permissionBasedObj;
+        Object durationsObj = permissionBasedSection.get("durations");
+        if (!(durationsObj instanceof Map)) return new java.util.HashMap<>();
+
+        Map<String, Object> durationsSection = (Map<String, Object>) durationsObj;
+        java.util.Map<String, Integer> result = new java.util.HashMap<>();
+
+        for (Map.Entry<String, Object> entry : durationsSection.entrySet()) {
+            if (entry.getValue() instanceof Integer) {
+                result.put(entry.getKey(), (Integer) entry.getValue());
+            }
+        }
+
+        return result;
+    }
+
+    public boolean isChatCooldownLogViolationsEnabled() {
+        return getChatControlNestedBoolean("cooldown", "log-violations", false);
+    }
+
+    public String getChatCooldownViolationLogFormat() {
+        return getChatControlNestedString("cooldown", "violation-log-format", "[ChatCooldown] {player} tried to send message too quickly");
+    }
+
+    // Messages Configuration
+    public String getChatControlNoPermissionMessage() {
+        return getChatControlNestedString("messages", "no-permission", "&cYou don't have permission to use this command.");
+    }
+
+    public String getChatControlModuleDisabledMessage() {
+        return getChatControlNestedString("messages", "module-disabled", "&cThis feature is currently disabled.");
+    }
+
+    public String getChatControlReloadSuccessMessage() {
+        return getChatControlNestedString("messages", "reload-success", "&aChat control configuration reloaded successfully.");
+    }
+
+    public String getChatControlReloadFailedMessage() {
+        return getChatControlNestedString("messages", "reload-failed", "&cFailed to reload chat control configuration.");
+    }
+
+    // Filter Messages
+    public String getChatFilterRuleAddedMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "rule-added", "&aFilter rule added: &7{rule}");
+    }
+
+    public String getChatFilterRuleRemovedMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "rule-removed", "&aFilter rule removed: &7{rule}");
+    }
+
+    public String getChatFilterRuleNotFoundMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "rule-not-found", "&cFilter rule not found: &7{rule}");
+    }
+
+    public String getChatFilterRuleAlreadyExistsMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "rule-already-exists", "&cFilter rule already exists: &7{rule}");
+    }
+
+    public String getChatFilterInvalidRegexMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "invalid-regex", "&cInvalid regex pattern: &7{rule}");
+    }
+
+    public String getChatFilterListHeaderMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "list-header", "&6Active Filter Rules:");
+    }
+
+    public String getChatFilterListFormatMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "list-format", "&7- {rule}");
+    }
+
+    public String getChatFilterListEmptyMessage() {
+        return getChatControlDoubleNestedString("messages", "filter", "list-empty", "&7No filter rules are currently active.");
+    }
+
+    // Cooldown Messages
+    public String getChatCooldownDurationSetMessage() {
+        return getChatControlDoubleNestedString("messages", "cooldown", "duration-set", "&aCooldown duration set to &7{duration} &aseconds.");
+    }
+
+    public String getChatCooldownDurationDisabledMessage() {
+        return getChatControlDoubleNestedString("messages", "cooldown", "duration-disabled", "&aCooldown has been disabled.");
+    }
+
+    public String getChatCooldownInvalidDurationMessage() {
+        return getChatControlDoubleNestedString("messages", "cooldown", "invalid-duration", "&cInvalid duration. Please enter a number.");
+    }
+
+    public String getChatCooldownStatusEnabledMessage() {
+        return getChatControlDoubleNestedString("messages", "cooldown", "status-enabled", "&aCooldown is currently &aenabled &7({duration}s)");
+    }
+
+    public String getChatCooldownStatusDisabledMessage() {
+        return getChatControlDoubleNestedString("messages", "cooldown", "status-disabled", "&aCooldown is currently &cdisabled");
+    }
+
+    // Advanced Configuration
+    public int getChatControlMaxFilterRules() {
+        return getChatControlNestedInt("advanced", "max-filter-rules", 50);
+    }
+
+    public boolean isChatControlDebugEnabled() {
+        return getChatControlNestedBoolean("advanced", "debug", false);
+    }
+
+    public String getChatControlDebugFormat() {
+        return getChatControlNestedString("advanced", "debug-format", "[ChatControl-Debug] {component}: {message}");
+    }
+
+    // Command Configuration
+    public String getChatFilterMainCommand() {
+        return getChatControlDoubleNestedString("commands", "filter", "main-command", "chatfilter");
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getChatFilterCommandAliases() {
+        Map<String, Object> commandsSection = getChatControlSection("commands");
+        Object filterObj = commandsSection.get("filter");
+        if (!(filterObj instanceof Map)) return java.util.Arrays.asList("cf", "filter");
+
+        Map<String, Object> filterSection = (Map<String, Object>) filterObj;
+        Object aliasesObj = filterSection.get("aliases");
+        if (aliasesObj instanceof java.util.List) {
+            return (java.util.List<String>) aliasesObj;
+        }
+        return java.util.Arrays.asList("cf", "filter");
+    }
+
+    public String getChatCooldownMainCommand() {
+        return getChatControlDoubleNestedString("commands", "cooldown", "main-command", "chatcooldown");
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getChatCooldownCommandAliases() {
+        Map<String, Object> commandsSection = getChatControlSection("commands");
+        Object cooldownObj = commandsSection.get("cooldown");
+        if (!(cooldownObj instanceof Map)) return java.util.Arrays.asList("cc", "cooldown");
+
+        Map<String, Object> cooldownSection = (Map<String, Object>) cooldownObj;
+        Object aliasesObj = cooldownSection.get("aliases");
+        if (aliasesObj instanceof java.util.List) {
+            return (java.util.List<String>) aliasesObj;
+        }
+        return java.util.Arrays.asList("cc", "cooldown");
+    }
+
+    // Methods for dynamic configuration updates (used by commands)
+    public void addChatFilterRule(String rule) {
+        // This would need to be implemented to save to config file
+        // For now, it's a placeholder for the command functionality
+    }
+
+    public void removeChatFilterRule(String rule) {
+        // This would need to be implemented to save to config file
+        // For now, it's a placeholder for the command functionality
+    }
+
+    public void setChatCooldownDuration(int duration) {
+        // This would need to be implemented to save to config file
+        // For now, it's a placeholder for the command functionality
+    }
+
+    // Helper method for cooldown component to check if there's a double nested boolean
+    private boolean getChatControlNestedBoolean(String section, String subsection, String path, boolean defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
+        return value instanceof Boolean ? (Boolean) value : defaultValue;
     }
 }

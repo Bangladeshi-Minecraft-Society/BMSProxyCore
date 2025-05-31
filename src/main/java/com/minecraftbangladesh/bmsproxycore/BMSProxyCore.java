@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.minecraftbangladesh.bmsproxycore.commands.*;
 import com.minecraftbangladesh.bmsproxycore.listeners.*;
 import com.minecraftbangladesh.bmsproxycore.messaging.MessagingManager;
+import com.minecraftbangladesh.bmsproxycore.chatcontrol.ChatControlManager;
 import com.minecraftbangladesh.bmsproxycore.utils.ConfigManager;
 import com.minecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
 import com.velocitypowered.api.event.Subscribe;
@@ -34,6 +35,7 @@ public class BMSProxyCore {
     private ConfigManager configManager;
     private DiscordWebhook discordWebhook;
     private MessagingManager messagingManager;
+    private ChatControlManager chatControlManager;
     private final Set<UUID> staffChatToggled = new HashSet<>();
 
     @Inject
@@ -62,6 +64,7 @@ public class BMSProxyCore {
         initializePrivateMessagesModule();
         initializeLobbyCommandModule();
         initializeAnnouncementModule();
+        initializeChatControlModule();
 
         logger.info("BMSProxyCore has been enabled!");
     }
@@ -207,6 +210,55 @@ public class BMSProxyCore {
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
     }
 
+    private void initializeChatControlModule() {
+        if (!configManager.isChatControlEnabled()) {
+            logger.info("Chat Control module is disabled in configuration.");
+            return;
+        }
+
+        logger.info("Initializing Chat Control module...");
+
+        // Initialize chat control manager
+        chatControlManager = new ChatControlManager(this);
+
+        // Register Chat Control listener
+        server.getEventManager().register(this, new ChatControlListener(this));
+
+        // Register Chat Filter commands if filter component is enabled
+        if (configManager.isChatFilterEnabled()) {
+            String filterMainCommand = configManager.getChatFilterMainCommand();
+            java.util.List<String> filterAliases = configManager.getChatFilterCommandAliases();
+
+            server.getCommandManager().register(
+                server.getCommandManager().metaBuilder(filterMainCommand)
+                    .aliases(filterAliases.toArray(new String[0]))
+                    .plugin(this)
+                    .build(),
+                new ChatFilterCommand(this)
+            );
+
+            logger.info("Chat Filter component initialized with command: /" + filterMainCommand);
+        }
+
+        // Register Chat Cooldown commands if cooldown component is enabled
+        if (configManager.isChatCooldownEnabled()) {
+            String cooldownMainCommand = configManager.getChatCooldownMainCommand();
+            java.util.List<String> cooldownAliases = configManager.getChatCooldownCommandAliases();
+
+            server.getCommandManager().register(
+                server.getCommandManager().metaBuilder(cooldownMainCommand)
+                    .aliases(cooldownAliases.toArray(new String[0]))
+                    .plugin(this)
+                    .build(),
+                new ChatCooldownCommand(this)
+            );
+
+            logger.info("Chat Cooldown component initialized with command: /" + cooldownMainCommand);
+        }
+
+        logger.info("Chat Control module initialized successfully.");
+    }
+
     public ProxyServer getServer() {
         return server;
     }
@@ -239,6 +291,14 @@ public class BMSProxyCore {
         return configManager.isLobbyCommandEnabled();
     }
 
+    public boolean isChatControlModuleEnabled() {
+        return configManager.isChatControlEnabled();
+    }
+
+    public ChatControlManager getChatControlManager() {
+        return chatControlManager;
+    }
+
     public boolean isAnnouncementModuleEnabled() {
         return configManager.isAnnouncementEnabled();
     }
@@ -256,6 +316,7 @@ public class BMSProxyCore {
             boolean wasPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
             boolean wasLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
             boolean wasAnnouncementEnabled = configManager.isAnnouncementEnabled();
+            boolean wasChatControlEnabled = configManager.isChatControlEnabled();
 
             // Reload configuration
             configManager.loadConfig();
@@ -266,6 +327,7 @@ public class BMSProxyCore {
             boolean isPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
             boolean isLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
             boolean isAnnouncementEnabled = configManager.isAnnouncementEnabled();
+            boolean isChatControlEnabled = configManager.isChatControlEnabled();
 
             // Handle Staff Chat module changes
             if (wasStaffChatEnabled != isStaffChatEnabled) {
@@ -325,6 +387,23 @@ public class BMSProxyCore {
                 result.changes.add("Announcement configuration reloaded");
             }
 
+            // Handle Chat Control module changes
+            if (wasChatControlEnabled != isChatControlEnabled) {
+                if (isChatControlEnabled) {
+                    initializeChatControlModule();
+                    result.changes.add("Chat Control module enabled");
+                } else {
+                    shutdownChatControlModule();
+                    result.changes.add("Chat Control module disabled");
+                }
+            } else if (isChatControlEnabled) {
+                // Module was already enabled, reload filter rules
+                if (chatControlManager != null) {
+                    chatControlManager.loadFilterRules();
+                }
+                result.changes.add("Chat Control configuration reloaded");
+            }
+
             result.success = true;
 
         } catch (Exception e) {
@@ -354,6 +433,16 @@ public class BMSProxyCore {
         messagingManager = null;
 
         logger.info("Private Messages module shut down.");
+    }
+
+    private void shutdownChatControlModule() {
+        logger.info("Shutting down Chat Control module...");
+
+        // Note: Velocity doesn't provide a way to unregister commands or listeners
+        // So we set the references to null and rely on the module enabled checks
+        chatControlManager = null;
+
+        logger.info("Chat Control module shut down.");
     }
 
     /**

@@ -1,0 +1,139 @@
+# Chat Control Module Configuration
+# This file contains all settings related to chat filtering and cooldown functionality
+
+# Component Configuration
+# Enable or disable individual components
+components:
+  # Chat Filter Component - Regex-based message filtering
+  filter:
+    enabled: true
+  # Chat Cooldown Component - Rate limiting for chat messages
+  cooldown:
+    enabled: true
+
+# Permission Configuration
+permissions:
+  # Chat Filter Permissions
+  filter:
+    # Permission to manage chat filter rules
+    manage: "bmsproxycore.chatcontrol.filter.manage"
+    # Permission to bypass chat filtering
+    bypass: "bmsproxycore.chatcontrol.filter.bypass"
+    # Permission to reload filter configuration
+    reload: "bmsproxycore.chatcontrol.filter.reload"
+  
+  # Chat Cooldown Permissions
+  cooldown:
+    # Permission to manage chat cooldown settings
+    manage: "bmsproxycore.chatcontrol.cooldown.manage"
+    # Permission to bypass chat cooldowns
+    bypass: "bmsproxycore.chatcontrol.cooldown.bypass"
+    # Permission to reload cooldown configuration
+    reload: "bmsproxycore.chatcontrol.cooldown.reload"
+
+# Chat Filter Configuration
+filter:
+  # Default filter rules (regex patterns)
+  # Messages matching these patterns will be blocked
+  rules:
+    - "(?i)\\b(spam|advertisement)\\b"  # Block spam/advertisement
+    - "(?i)\\b(hack|cheat|exploit)\\b"  # Block hack/cheat mentions
+    - "(?i)\\b(discord\\.gg|bit\\.ly)\\b"  # Block common link patterns
+  
+  # Filter action when a message is blocked
+  # Options: "block" (silently block), "warn" (block and warn player), "replace" (replace with filtered message)
+  action: "warn"
+  
+  # Message to show when a message is filtered (only used with "warn" action)
+  blocked-message: "&cYour message was blocked by the chat filter."
+  
+  # Replacement text for filtered content (only used with "replace" action)
+  replacement-text: "***"
+  
+  # Log filtered messages to console
+  log-filtered: true
+  
+  # Console log format for filtered messages
+  log-format: "[ChatFilter] {player} attempted to send: {message}"
+
+# Chat Cooldown Configuration
+cooldown:
+  # Cooldown duration in seconds
+  # Set to 0 to disable cooldowns
+  duration: 3
+  
+  # Message to show when a player is on cooldown
+  cooldown-message: "&cYou must wait {time} seconds before sending another message."
+  
+  # Different cooldown durations based on permissions (optional)
+  # Players with higher permissions get shorter cooldowns
+  permission-based:
+    enabled: false
+    durations:
+      "bmsproxycore.chatcontrol.cooldown.vip": 2
+      "bmsproxycore.chatcontrol.cooldown.premium": 1
+  
+  # Log cooldown violations to console
+  log-violations: false
+  
+  # Console log format for cooldown violations
+  violation-log-format: "[ChatCooldown] {player} tried to send message too quickly"
+
+# Command Configuration
+commands:
+  # Chat Filter Commands
+  filter:
+    # Main command for managing chat filters
+    main-command: "chatfilter"
+    aliases:
+      - "cf"
+      - "filter"
+  
+  # Chat Cooldown Commands  
+  cooldown:
+    # Main command for managing chat cooldowns
+    main-command: "chatcooldown"
+    aliases:
+      - "cc"
+      - "cooldown"
+
+# Messages Configuration
+messages:
+  # General messages
+  no-permission: "&cYou don't have permission to use this command."
+  module-disabled: "&cThis feature is currently disabled."
+  reload-success: "&aChat control configuration reloaded successfully."
+  reload-failed: "&cFailed to reload chat control configuration."
+  
+  # Filter management messages
+  filter:
+    rule-added: "&aFilter rule added: &7{rule}"
+    rule-removed: "&aFilter rule removed: &7{rule}"
+    rule-not-found: "&cFilter rule not found: &7{rule}"
+    rule-already-exists: "&cFilter rule already exists: &7{rule}"
+    invalid-regex: "&cInvalid regex pattern: &7{rule}"
+    list-header: "&6Active Filter Rules:"
+    list-format: "&7- {rule}"
+    list-empty: "&7No filter rules are currently active."
+  
+  # Cooldown management messages
+  cooldown:
+    duration-set: "&aCooldown duration set to &7{duration} &aseconds."
+    duration-disabled: "&aCooldown has been disabled."
+    invalid-duration: "&cInvalid duration. Please enter a number."
+    status-enabled: "&aCooldown is currently &aenabled &7({duration}s)"
+    status-disabled: "&aCooldown is currently &cdisabled"
+
+# Advanced Configuration
+advanced:
+  # Maximum number of filter rules allowed
+  max-filter-rules: 50
+  
+  # Case sensitivity for filter rules (if not specified in regex)
+  case-sensitive: false
+  
+  # Enable debug mode for troubleshooting
+  debug: false
+  
+  # Debug log format
+  debug-format: "[ChatControl-Debug] {component}: {message}"
