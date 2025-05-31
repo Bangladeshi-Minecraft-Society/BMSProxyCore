@@ -17,6 +17,7 @@ public class ChatListener {
     }
 
     @Subscribe(order = PostOrder.NORMAL)
+    @SuppressWarnings("deprecation") // setResult is deprecated but still the only way to modify chat in Velocity
     public void onPlayerChat(PlayerChatEvent event) {
         Player player = event.getPlayer();
 
