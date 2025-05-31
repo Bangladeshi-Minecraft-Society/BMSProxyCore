@@ -36,17 +36,41 @@ filter:
   # Default filter rules (regex patterns)
   # Messages matching these patterns will be blocked
   rules:
+    # Anti-spam and advertisement rules
     - "(?i)\\b(spam|advertisement)\\b"  # Block spam/advertisement
     - "(?i)\\b(hack|cheat|exploit)\\b"  # Block hack/cheat mentions
     - "(?i)\\b(discord\\.gg|bit\\.ly)\\b"  # Block common link patterns
+
+    # Anti-swear rules (common vulgar language)
+    # Note: These patterns use word boundaries (\b) to avoid false positives
+    - "(?i)\\b(fuck|fucking|fucked|fucker)\\b"  # F-word variations
+    - "(?i)\\b(shit|shitting|shitted)\\b"  # S-word variations
+    - "(?i)\\b(bitch|bitching|bitches)\\b"  # B-word variations
+    - "(?i)\\b(damn|damned|dammit)\\b"  # D-word variations
+    - "(?i)\\b(ass|asshole|asses)\\b"  # A-word variations
+    - "(?i)\\b(crap|crappy|crapped)\\b"  # C-word variations
+    - "(?i)\\b(piss|pissed|pissing)\\b"  # P-word variations
+    - "(?i)\\b(bastard|bastards)\\b"  # Bastard variations
+    - "(?i)\\b(idiot|idiots|idiotic)\\b"  # Idiot variations
+    - "(?i)\\b(stupid|stupidity)\\b"  # Stupid variations
+
+    # Offensive slurs and hate speech (be very careful with these)
+    - "(?i)\\b(retard|retarded|retards)\\b"  # R-word (offensive)
+    - "(?i)\\b(gay|fag|faggot)\\b"  # Homophobic slurs
+    - "(?i)\\b(nigger|nigga)\\b"  # Racial slurs
+
+    # Leetspeak and character substitution variants
+    - "(?i)\\b(f[u\\*@#]ck|sh[i\\*@#]t|b[i\\*@#]tch)\\b"  # Common substitutions
+    - "(?i)\\b(a[s\\*@#]{1,2}|@ss|a\\*\\*)\\b"  # Ass with substitutions
+    - "(?i)\\b(d[a\\*@#]mn|d@mn)\\b"  # Damn with substitutions
   
   # Filter action when a message is blocked
   # Options: "block" (silently block), "warn" (block and warn player), "replace" (replace with filtered message)
   action: "warn"
-  
+
   # Message to show when a message is filtered (only used with "warn" action)
   blocked-message: "&cYour message was blocked by the chat filter."
-  
+
   # Replacement text for filtered content (only used with "replace" action)
   replacement-text: "***"
   
@@ -128,12 +152,33 @@ messages:
 advanced:
   # Maximum number of filter rules allowed
   max-filter-rules: 50
-  
+
   # Case sensitivity for filter rules (if not specified in regex)
   case-sensitive: false
-  
+
   # Enable debug mode for troubleshooting
   debug: false
-  
+
   # Debug log format
   debug-format: "[ChatControl-Debug] {component}: {message}"
+
+  # Anti-Swear Filter Customization Guide:
+  #
+  # Adding Custom Swear Words:
+  # - Use /chatfilter add "(?i)\\b(yourword|variation)\\b"
+  # - Example: /chatfilter add "(?i)\\b(noob|newb)\\b"
+  #
+  # Removing Default Rules:
+  # - Use /chatfilter remove "pattern" to remove specific rules
+  # - Example: /chatfilter remove "(?i)\\b(damn|damned|dammit)\\b"
+  #
+  # Pattern Examples:
+  # - Simple word: "(?i)\\bwordhere\\b"
+  # - Multiple variations: "(?i)\\b(word1|word2|word3)\\b"
+  # - With substitutions: "(?i)\\b(w[o0@]rd|w\\*rd)\\b"
+  # - Partial matching: "(?i)badword" (matches anywhere in message)
+  #
+  # Testing Patterns:
+  # - Enable debug mode above to see which patterns trigger
+  # - Test with staff accounts that have bypass permissions
+  # - Use /chatfilter list to see all active rules
