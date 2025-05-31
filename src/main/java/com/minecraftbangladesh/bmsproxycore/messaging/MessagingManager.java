@@ -55,7 +55,32 @@ public class MessagingManager {
             sender.sendMessage(MessageUtils.formatMessage(errorMessage));
             return false;
         }
-        
+
+        // Check chat lock for private messages (if enabled)
+        if (plugin.getConfigManager().isPrivateMessageChatLockRespected() &&
+            plugin.getChatControlManager().isChatLocked()) {
+
+            // Check bypass permission
+            String bypassPermission = plugin.getConfigManager().getLockChatBypassPermission();
+            if (bypassPermission.isEmpty() || !sender.hasPermission(bypassPermission)) {
+                String errorMessage = plugin.getConfigManager().getPrivateMessageChatLockBlockedMessage();
+                sender.sendMessage(MessageUtils.formatMessage(errorMessage));
+                return false;
+            }
+        }
+
+        // Apply chat filtering to private messages (if enabled)
+        if (plugin.getConfigManager().isPrivateMessageFilterEnabled()) {
+            String filteredMessage = plugin.getChatControlManager().applyMessageFilter(message, sender);
+            if (filteredMessage == null) {
+                // Message was blocked by filter
+                String errorMessage = plugin.getConfigManager().getPrivateMessageFilterBlockedMessage();
+                sender.sendMessage(MessageUtils.formatMessage(errorMessage));
+                return false;
+            }
+            message = filteredMessage; // Use the filtered message
+        }
+
         // Update reply targets
         setReplyTarget(senderUUID, receiverUUID);
         setReplyTarget(receiverUUID, senderUUID);

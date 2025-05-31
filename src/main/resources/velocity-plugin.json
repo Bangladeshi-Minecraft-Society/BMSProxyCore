@@ -1,7 +1,7 @@
 {
   "id": "bmsproxycore",
   "name": "BMSProxyCore",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A staff chat system for Velocity proxies",
   "authors": ["MinecraftBangladesh"],
   "main": "com.minecraftbangladesh.bmsproxycore.BMSProxyCore",

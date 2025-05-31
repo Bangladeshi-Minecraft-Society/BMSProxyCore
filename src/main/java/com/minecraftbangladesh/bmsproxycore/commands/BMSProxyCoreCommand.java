@@ -91,7 +91,7 @@ public class BMSProxyCoreCommand implements SimpleCommand {
         }
 
         source.sendMessage(MessageUtils.formatMessage("&b&lBMSProxyCore Status"));
-        source.sendMessage(MessageUtils.formatMessage("&7Version: &f1.0.0"));
+        source.sendMessage(MessageUtils.formatMessage("&7Version: &f1.0.2"));
         source.sendMessage(MessageUtils.formatMessage(""));
 
         // Module status

@@ -26,7 +26,7 @@ import java.util.UUID;
 @Plugin(
         id = "bmsproxycore",
         name = "BMSProxyCore",
-        version = "1.0.0",
+        version = "1.0.2",
         description = "A staff chat system for Velocity proxies",
         authors = {"MinecraftBangladesh"}
 )
@@ -286,6 +286,38 @@ public class BMSProxyCore {
             );
 
             logger.info("Chat Cooldown component initialized with command: /" + cooldownMainCommand);
+        }
+
+        // Register Clear Chat commands if clear chat component is enabled
+        if (configManager.isClearChatEnabled()) {
+            String clearChatMainCommand = configManager.getClearChatMainCommand();
+            java.util.List<String> clearChatAliases = configManager.getClearChatCommandAliases();
+
+            server.getCommandManager().register(
+                server.getCommandManager().metaBuilder(clearChatMainCommand)
+                    .aliases(clearChatAliases.toArray(new String[0]))
+                    .plugin(this)
+                    .build(),
+                new ClearChatCommand(this)
+            );
+
+            logger.info("Clear Chat component initialized with command: /" + clearChatMainCommand);
+        }
+
+        // Register Lock Chat commands if lock chat component is enabled
+        if (configManager.isLockChatEnabled()) {
+            String lockChatMainCommand = configManager.getLockChatMainCommand();
+            java.util.List<String> lockChatAliases = configManager.getLockChatCommandAliases();
+
+            server.getCommandManager().register(
+                server.getCommandManager().metaBuilder(lockChatMainCommand)
+                    .aliases(lockChatAliases.toArray(new String[0]))
+                    .plugin(this)
+                    .build(),
+                new LockChatCommand(this)
+            );
+
+            logger.info("Lock Chat component initialized with command: /" + lockChatMainCommand);
         }
 
         logger.info("Chat Control module initialized successfully.");

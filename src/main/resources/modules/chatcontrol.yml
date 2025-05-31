@@ -19,9 +19,11 @@ permissions:
     manage: "bmsproxycore.chatcontrol.filter.manage"
     # Permission to bypass chat filtering
     bypass: "bmsproxycore.chatcontrol.filter.bypass"
+    # Permission to bypass chat filtering in private messages
+    bypass-privatemessages: "bmsproxycore.chatcontrol.filter.bypass.privatemessages"
     # Permission to reload filter configuration
     reload: "bmsproxycore.chatcontrol.filter.reload"
-  
+
   # Chat Cooldown Permissions
   cooldown:
     # Permission to manage chat cooldown settings
@@ -30,6 +32,18 @@ permissions:
     bypass: "bmsproxycore.chatcontrol.cooldown.bypass"
     # Permission to reload cooldown configuration
     reload: "bmsproxycore.chatcontrol.cooldown.reload"
+
+  # Clear Chat Permissions
+  clearchat:
+    # Permission to use clear chat command
+    use: "bmsproxycore.chatcontrol.clearchat.use"
+
+  # Lock Chat Permissions
+  lockchat:
+    # Permission to use lock chat command
+    use: "bmsproxycore.chatcontrol.lockchat.use"
+    # Permission to bypass chat lock (can chat when locked)
+    bypass: "bmsproxycore.chatcontrol.lockchat.bypass"
 
 # Chat Filter Configuration
 filter:
@@ -103,6 +117,17 @@ cooldown:
   # Console log format for cooldown violations
   violation-log-format: "[ChatCooldown] {player} tried to send message too quickly"
 
+# Private Message Integration
+privatemessages:
+  # Apply chat filtering to private messages
+  apply-filter: true
+  # Respect chat lock for private messages (if false, PMs work even when chat is locked)
+  respect-chatlock: true
+  # Message shown when private message is blocked by filter
+  filter-blocked-message: "&cYour private message was blocked by the chat filter."
+  # Message shown when private message is blocked by chat lock
+  chatlock-blocked-message: "&cPrivate messages are disabled while chat is locked."
+
 # Command Configuration
 commands:
   # Chat Filter Commands
@@ -112,14 +137,44 @@ commands:
     aliases:
       - "cf"
       - "filter"
-  
-  # Chat Cooldown Commands  
+
+  # Chat Cooldown Commands
   cooldown:
     # Main command for managing chat cooldowns
     main-command: "chatcooldown"
     aliases:
       - "cc"
       - "cooldown"
+
+  # Clear Chat Commands
+  clearchat:
+    # Enable/disable clear chat functionality
+    enabled: true
+    # Main command for clearing chat
+    main-command: "clearchat"
+    aliases:
+      - "cc"
+      - "chatclear"
+    # Number of empty messages to send for clearing
+    empty-messages: 100
+    # Message shown after clearing chat
+    completion-message: "&aChat has been cleared by &7{player}&a."
+
+  # Lock Chat Commands
+  lockchat:
+    # Enable/disable lock chat functionality
+    enabled: true
+    # Main command for locking/unlocking chat
+    main-command: "lockchat"
+    aliases:
+      - "lc"
+      - "chatlock"
+    # Message shown when chat is locked
+    locked-message: "&cChat is currently muted by staff."
+    # Message shown when chat is unlocked
+    unlocked-message: "&aChat has been unlocked by &7{player}&a."
+    # Message shown when trying to chat while locked
+    blocked-message: "&cYou cannot send messages while chat is locked."
 
 # Messages Configuration
 messages:

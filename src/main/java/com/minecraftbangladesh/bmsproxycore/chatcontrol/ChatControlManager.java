@@ -21,7 +21,10 @@ public class ChatControlManager {
     
     // Chat cooldown data
     private final Map<UUID, Long> lastMessageTime = new ConcurrentHashMap<>();
-    
+
+    // Chat lock state
+    private volatile boolean chatLocked = false;
+
     public ChatControlManager(BMSProxyCore plugin) {
         this.plugin = plugin;
         loadFilterRules();
@@ -269,5 +272,121 @@ public class ChatControlManager {
      */
     public int getActiveCooldownCount() {
         return lastMessageTime.size();
+    }
+
+    /**
+     * Check if chat is currently locked
+     * @return true if chat is locked, false otherwise
+     */
+    public boolean isChatLocked() {
+        return chatLocked;
+    }
+
+    /**
+     * Set the chat lock state
+     * @param locked true to lock chat, false to unlock
+     */
+    public void setChatLocked(boolean locked) {
+        this.chatLocked = locked;
+        if (plugin.getConfigManager().isChatControlDebugEnabled()) {
+            plugin.getLogger().info("[ChatControl-Debug] Chat lock state changed to: " + (locked ? "LOCKED" : "UNLOCKED"));
+        }
+    }
+
+    /**
+     * Toggle the chat lock state
+     * @return The new chat lock state (true = locked, false = unlocked)
+     */
+    public boolean toggleChatLock() {
+        chatLocked = !chatLocked;
+        if (plugin.getConfigManager().isChatControlDebugEnabled()) {
+            plugin.getLogger().info("[ChatControl-Debug] Chat lock toggled to: " + (chatLocked ? "LOCKED" : "UNLOCKED"));
+        }
+        return chatLocked;
+    }
+
+    /**
+     * Check if a player can send a message considering chat lock
+     * @param player The player to check
+     * @return true if the player can send a message, false if blocked by chat lock
+     */
+    public boolean canSendMessageWithChatLock(Player player) {
+        if (!chatLocked) {
+            return true;
+        }
+
+        // Check bypass permission
+        String bypassPermission = plugin.getConfigManager().getLockChatBypassPermission();
+        if (!bypassPermission.isEmpty() && player.hasPermission(bypassPermission)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Apply chat filtering to a message (for use with private messages)
+     * @param message The message to filter
+     * @param player The player sending the message (for bypass permission check)
+     * @return The filtered message, or null if the message should be blocked
+     */
+    public String applyMessageFilter(String message, Player player) {
+        if (!plugin.getConfigManager().isChatFilterEnabled()) {
+            return message;
+        }
+
+        // Check bypass permission for private messages
+        String bypassPermission = plugin.getConfigManager().getChatFilterBypassPrivateMessagesPermission();
+        if (!bypassPermission.isEmpty() && player.hasPermission(bypassPermission)) {
+            return message;
+        }
+
+        // Check if message should be filtered
+        if (shouldFilterMessage(message)) {
+            String action = plugin.getConfigManager().getChatFilterAction();
+
+            switch (action.toLowerCase()) {
+                case "block":
+                case "warn":
+                    // Block the message
+                    return null;
+
+                case "replace":
+                    // Replace filtered content with replacement text
+                    String replacementText = plugin.getConfigManager().getChatFilterReplacementText();
+                    return replaceFilteredContent(message, replacementText);
+
+                default:
+                    return message;
+            }
+        }
+
+        return message;
+    }
+
+    /**
+     * Replace filtered content in a message with replacement text
+     * @param message The original message
+     * @param replacementText The text to replace filtered content with
+     * @return The message with filtered content replaced
+     */
+    private String replaceFilteredContent(String message, String replacementText) {
+        String result = message;
+
+        // Get filter rules and apply replacements
+        for (String rule : getFilterRules()) {
+            try {
+                // Apply case sensitivity based on configuration
+                String pattern = plugin.getConfigManager().isChatFilterCaseSensitive() ? rule : "(?i)" + rule;
+                result = result.replaceAll(pattern, replacementText);
+            } catch (Exception e) {
+                // If regex replacement fails, continue with next rule
+                if (plugin.getConfigManager().isChatControlDebugEnabled()) {
+                    plugin.getLogger().warn("[ChatControl-Debug] Failed to apply replacement for rule: " + rule);
+                }
+            }
+        }
+
+        return result;
     }
 }

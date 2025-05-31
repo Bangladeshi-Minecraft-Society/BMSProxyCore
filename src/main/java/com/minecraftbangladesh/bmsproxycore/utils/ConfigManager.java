@@ -1279,6 +1279,25 @@ public class ConfigManager {
         return getChatControlDoubleNestedString("permissions", "cooldown", "reload", "bmsproxycore.chatcontrol.cooldown.reload");
     }
 
+    // Clear Chat Permissions
+    public String getClearChatUsePermission() {
+        return getChatControlDoubleNestedString("permissions", "clearchat", "use", "bmsproxycore.chatcontrol.clearchat.use");
+    }
+
+    // Lock Chat Permissions
+    public String getLockChatUsePermission() {
+        return getChatControlDoubleNestedString("permissions", "lockchat", "use", "bmsproxycore.chatcontrol.lockchat.use");
+    }
+
+    public String getLockChatBypassPermission() {
+        return getChatControlDoubleNestedString("permissions", "lockchat", "bypass", "bmsproxycore.chatcontrol.lockchat.bypass");
+    }
+
+    // Private Message Filter Bypass Permission
+    public String getChatFilterBypassPrivateMessagesPermission() {
+        return getChatControlDoubleNestedString("permissions", "filter", "bypass-privatemessages", "bmsproxycore.chatcontrol.filter.bypass.privatemessages");
+    }
+
     // Chat Filter Configuration
     @SuppressWarnings("unchecked")
     public java.util.List<String> getChatFilterRules() {
@@ -1479,6 +1498,106 @@ public class ConfigManager {
         }
         return java.util.Arrays.asList("cc", "cooldown");
     }
+
+    // Clear Chat Configuration
+    public boolean isClearChatEnabled() {
+        return getChatControlNestedBoolean("commands", "clearchat", "enabled", true);
+    }
+
+    public String getClearChatMainCommand() {
+        return getChatControlDoubleNestedString("commands", "clearchat", "main-command", "clearchat");
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getClearChatCommandAliases() {
+        Map<String, Object> commandsSection = getChatControlSection("commands");
+        Object clearchatObj = commandsSection.get("clearchat");
+        if (!(clearchatObj instanceof Map)) return java.util.Arrays.asList("cc", "chatclear");
+
+        Map<String, Object> clearchatSection = (Map<String, Object>) clearchatObj;
+        Object aliasesObj = clearchatSection.get("aliases");
+        if (aliasesObj instanceof java.util.List) {
+            return (java.util.List<String>) aliasesObj;
+        }
+        return java.util.Arrays.asList("cc", "chatclear");
+    }
+
+    public int getClearChatEmptyMessages() {
+        return getChatControlDoubleNestedInt("commands", "clearchat", "empty-messages", 100);
+    }
+
+    public String getClearChatCompletionMessage() {
+        return getChatControlDoubleNestedString("commands", "clearchat", "completion-message", "&aChat has been cleared by &7{player}&a.");
+    }
+
+    // Lock Chat Configuration
+    public boolean isLockChatEnabled() {
+        return getChatControlNestedBoolean("commands", "lockchat", "enabled", true);
+    }
+
+    public String getLockChatMainCommand() {
+        return getChatControlDoubleNestedString("commands", "lockchat", "main-command", "lockchat");
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getLockChatCommandAliases() {
+        Map<String, Object> commandsSection = getChatControlSection("commands");
+        Object lockchatObj = commandsSection.get("lockchat");
+        if (!(lockchatObj instanceof Map)) return java.util.Arrays.asList("lc", "chatlock");
+
+        Map<String, Object> lockchatSection = (Map<String, Object>) lockchatObj;
+        Object aliasesObj = lockchatSection.get("aliases");
+        if (aliasesObj instanceof java.util.List) {
+            return (java.util.List<String>) aliasesObj;
+        }
+        return java.util.Arrays.asList("lc", "chatlock");
+    }
+
+    public String getLockChatLockedMessage() {
+        return getChatControlDoubleNestedString("commands", "lockchat", "locked-message", "&cChat is currently muted by staff.");
+    }
+
+    public String getLockChatUnlockedMessage() {
+        return getChatControlDoubleNestedString("commands", "lockchat", "unlocked-message", "&aChat has been unlocked by &7{player}&a.");
+    }
+
+    public String getLockChatBlockedMessage() {
+        return getChatControlDoubleNestedString("commands", "lockchat", "blocked-message", "&cYou cannot send messages while chat is locked.");
+    }
+
+    // Private Message Integration Configuration
+    public boolean isPrivateMessageFilterEnabled() {
+        return getChatControlNestedBoolean("privatemessages", "apply-filter", true);
+    }
+
+    public boolean isPrivateMessageChatLockRespected() {
+        return getChatControlNestedBoolean("privatemessages", "respect-chatlock", true);
+    }
+
+    public String getPrivateMessageFilterBlockedMessage() {
+        return getChatControlNestedString("privatemessages", "filter-blocked-message", "&cYour private message was blocked by the chat filter.");
+    }
+
+    public String getPrivateMessageChatLockBlockedMessage() {
+        return getChatControlNestedString("privatemessages", "chatlock-blocked-message", "&cPrivate messages are disabled while chat is locked.");
+    }
+
+    // Helper method for double nested int values
+    private int getChatControlDoubleNestedInt(String section, String subsection, String path, int defaultValue) {
+        if (!isChatControlEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getChatControlSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
+        return value instanceof Integer ? (Integer) value : defaultValue;
+    }
+
+
 
     // Methods for dynamic configuration updates (used by commands)
     public void addChatFilterRule(String rule) {

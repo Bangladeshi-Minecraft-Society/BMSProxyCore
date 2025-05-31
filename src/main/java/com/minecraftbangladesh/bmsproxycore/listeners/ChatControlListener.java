@@ -33,7 +33,12 @@ public class ChatControlListener {
             return;
         }
 
-        // Check chat cooldown first
+        // Check chat lock first
+        if (!checkChatLock(player, event)) {
+            return; // Event already cancelled by chat lock check
+        }
+
+        // Check chat cooldown
         if (plugin.getConfigManager().isChatCooldownEnabled()) {
             if (!checkCooldown(player, event)) {
                 return; // Event already cancelled by cooldown check
@@ -193,5 +198,24 @@ public class ChatControlListener {
         }
         
         return result;
+    }
+
+    /**
+     * Check if the player can send a message considering chat lock
+     * @param player The player sending the message
+     * @param event The chat event
+     * @return true if the message should continue processing, false if blocked
+     */
+    @SuppressWarnings("deprecation") // setResult is deprecated but still the only way to modify chat in Velocity
+    private boolean checkChatLock(Player player, PlayerChatEvent event) {
+        // Check if player can send message with chat lock
+        if (!plugin.getChatControlManager().canSendMessageWithChatLock(player)) {
+            // Block the message and warn the player
+            event.setResult(PlayerChatEvent.ChatResult.denied());
+            String blockedMessage = plugin.getConfigManager().getLockChatBlockedMessage();
+            player.sendMessage(MessageUtils.formatMessage(blockedMessage));
+            return false;
+        }
+        return true;
     }
 }
