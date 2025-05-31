@@ -77,6 +77,58 @@ public class MessagingManager {
         
         return true;
     }
+
+    /**
+     * Attempt to send a cross-proxy private message
+     *
+     * @param sender The player sending the message
+     * @param targetName The name of the target player
+     * @param message The message content
+     * @return true if the message was sent successfully, false otherwise
+     */
+    public boolean sendCrossProxyMessage(Player sender, String targetName, String message) {
+        // Check if cross-proxy messaging is available
+        if (plugin.getCrossProxyMessagingManager() == null || !plugin.getConfigManager().isPrivateMessagesRedisEnabled()) {
+            return false;
+        }
+
+        UUID senderUUID = sender.getUniqueId();
+        String senderName = sender.getUsername();
+
+        // Check if sender is trying to message themselves
+        if (senderName.equalsIgnoreCase(targetName)) {
+            sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getMessagingErrorMessageSelf()));
+            return false;
+        }
+
+        // Attempt cross-proxy message delivery
+        plugin.getCrossProxyMessagingManager().sendCrossProxyMessage(senderName, senderUUID, targetName, message)
+                .thenAccept(success -> {
+                    if (success) {
+                        // Message was sent successfully, show confirmation to sender
+                        String senderFormat = plugin.getConfigManager().getCrossProxyPrivateMessageSenderFormat()
+                                .replace("{receiver}", targetName)
+                                .replace("{proxy}", "cross-proxy")
+                                .replace("{message}", message);
+                        sender.sendMessage(MessageUtils.formatMessage(senderFormat));
+
+                        // Broadcast to local social spies
+                        broadcastLocalCrossProxySocialSpy(senderName, senderUUID, targetName, message);
+
+                    } else {
+                        // Player not found on any proxy
+                        sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getCrossProxyPlayerNotFoundMessage()));
+                    }
+                })
+                .exceptionally(throwable -> {
+                    // Error occurred during cross-proxy messaging
+                    plugin.getLogger().error("Error during cross-proxy messaging", throwable);
+                    sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getCrossProxyLookupTimeoutMessage()));
+                    return null;
+                });
+
+        return true; // Return true as we've initiated the process
+    }
     
     /**
      * Broadcast a private message to all social spies
@@ -261,4 +313,27 @@ public class MessagingManager {
         // Remove player's reply target
         replyTargets.remove(player);
     }
-} 
+
+    /**
+     * Broadcast cross-proxy social spy message to local players only
+     */
+    private void broadcastLocalCrossProxySocialSpy(String senderName, UUID senderUUID, String receiverName, String message) {
+        String socialSpyFormat = plugin.getConfigManager().getCrossProxyPrivateMessageSocialSpyFormat()
+                .replace("{sender}", senderName)
+                .replace("{sender_proxy}", plugin.getConfigManager().getPrivateMessagesRedisProxyId())
+                .replace("{receiver}", receiverName)
+                .replace("{receiver_proxy}", "cross-proxy")
+                .replace("{message}", message);
+
+        Component formattedMessage = MessageUtils.formatMessage(socialSpyFormat);
+
+        for (Player player : plugin.getServer().getAllPlayers()) {
+            if (isSocialSpyEnabled(player.getUniqueId())) {
+                // Don't show social spy to the sender
+                if (!player.getUniqueId().equals(senderUUID)) {
+                    player.sendMessage(formattedMessage);
+                }
+            }
+        }
+    }
+}

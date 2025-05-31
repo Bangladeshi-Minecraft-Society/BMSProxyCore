@@ -52,13 +52,6 @@ public class MessageCommand implements SimpleCommand {
         String targetName = args[0];
         Optional<Player> targetOptional = plugin.getServer().getPlayer(targetName);
 
-        if (targetOptional.isEmpty()) {
-            sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getMessagingErrorPlayerNotFound()));
-            return;
-        }
-
-        Player target = targetOptional.get();
-
         // Build the message from the remaining arguments
         StringBuilder messageBuilder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
@@ -66,8 +59,20 @@ public class MessageCommand implements SimpleCommand {
         }
         String message = messageBuilder.toString().trim();
 
-        // Send the message
-        plugin.getMessagingManager().sendMessage(sender, target, message);
+        if (targetOptional.isPresent()) {
+            // Player found locally, send normal message
+            Player target = targetOptional.get();
+            plugin.getMessagingManager().sendMessage(sender, target, message);
+        } else {
+            // Player not found locally, try cross-proxy messaging
+            boolean crossProxyAttempted = plugin.getMessagingManager().sendCrossProxyMessage(sender, targetName, message);
+
+            if (!crossProxyAttempted) {
+                // Cross-proxy messaging not available, show error
+                sender.sendMessage(MessageUtils.formatMessage(plugin.getConfigManager().getMessagingErrorPlayerNotFound()));
+            }
+            // If cross-proxy was attempted, the result will be handled asynchronously
+        }
     }
 
     @Override
@@ -75,14 +80,21 @@ public class MessageCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length == 1) {
-            // Suggest online player names for the first argument
-            String partialName = args[0].toLowerCase();
-            List<String> completions = plugin.getServer().getAllPlayers().stream()
-                    .map(Player::getUsername)
-                    .filter(name -> name.toLowerCase().startsWith(partialName))
-                    .collect(Collectors.toList());
+            // Suggest player names (local + cross-proxy if available)
+            String partialName = args[0];
 
-            return CompletableFuture.completedFuture(completions);
+            // Try to get cross-proxy suggestions if available
+            if (plugin.getCrossProxyMessagingManager() != null && plugin.getConfigManager().isPrivateMessagesRedisEnabled()) {
+                List<String> completions = plugin.getCrossProxyMessagingManager().getFilteredPlayerNames(partialName);
+                return CompletableFuture.completedFuture(completions);
+            } else {
+                // Fallback to local players only
+                List<String> completions = plugin.getServer().getAllPlayers().stream()
+                        .map(Player::getUsername)
+                        .filter(name -> name.toLowerCase().startsWith(partialName.toLowerCase()))
+                        .collect(Collectors.toList());
+                return CompletableFuture.completedFuture(completions);
+            }
         }
 
         return CompletableFuture.completedFuture(new ArrayList<>());

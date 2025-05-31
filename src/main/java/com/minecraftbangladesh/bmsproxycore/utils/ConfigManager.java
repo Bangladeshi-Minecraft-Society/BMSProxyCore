@@ -402,20 +402,7 @@ public class ConfigManager {
         return value instanceof String ? (String) value : defaultValue;
     }
 
-    private String getPrivateMessagesNestedString(String section, String path, String defaultValue) {
-        if (!isPrivateMessagesEnabled()) return defaultValue;
-        Map<String, Object> sectionMap = getPrivateMessagesSection(section);
-        if (sectionMap == null) return defaultValue;
-        Object value = sectionMap.get(path);
-        return value instanceof String ? (String) value : defaultValue;
-    }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getPrivateMessagesSection(String path) {
-        if (!isPrivateMessagesEnabled()) return new HashMap<>();
-        Object value = privateMessagesConfig.get(path);
-        return value instanceof Map ? (Map<String, Object>) value : new HashMap<>();
-    }
 
     private String getLobbyCommandNestedString(String section, String path, String defaultValue) {
         if (!isLobbyCommandEnabled()) return defaultValue;
@@ -497,6 +484,60 @@ public class ConfigManager {
     private String getPrivateMessagesString(String path, String defaultValue) {
         if (!isPrivateMessagesEnabled()) return defaultValue;
         Object value = privateMessagesConfig.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getPrivateMessagesSection(String section) {
+        if (!isPrivateMessagesEnabled()) return null;
+        Object sectionObj = privateMessagesConfig.get(section);
+        return sectionObj instanceof Map ? (Map<String, Object>) sectionObj : null;
+    }
+
+    private String getPrivateMessagesNestedString(String section, String path, String defaultValue) {
+        if (!isPrivateMessagesEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getPrivateMessagesSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    private boolean getPrivateMessagesNestedBoolean(String section, String path, boolean defaultValue) {
+        if (!isPrivateMessagesEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getPrivateMessagesSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof Boolean ? (Boolean) value : defaultValue;
+    }
+
+    private int getPrivateMessagesNestedInt(String section, String path, int defaultValue) {
+        if (!isPrivateMessagesEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getPrivateMessagesSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private String getPrivateMessagesDoubleNestedString(String section, String subsection, String path, String defaultValue) {
+        if (!isPrivateMessagesEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getPrivateMessagesSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
         return value instanceof String ? (String) value : defaultValue;
     }
 
@@ -874,6 +915,80 @@ public class ConfigManager {
 
     public String getCrossProxyDisconnectFormat() {
         return getStaffChatString("cross-proxy-disconnect-format", "{prefix} &e{player} &cleft &7the network &8(&7{proxy}&8)");
+    }
+
+    // Private Messages Redis Configuration getters
+    public boolean isPrivateMessagesRedisEnabled() {
+        return getPrivateMessagesNestedBoolean("redis", "enabled", false);
+    }
+
+    public String getPrivateMessagesRedisHost() {
+        String host = getPrivateMessagesNestedString("redis", "host", "");
+        return host.isEmpty() ? getRedisHost() : host;
+    }
+
+    public int getPrivateMessagesRedisPort() {
+        int port = getPrivateMessagesNestedInt("redis", "port", 0);
+        return port == 0 ? getRedisPort() : port;
+    }
+
+    public String getPrivateMessagesRedisPassword() {
+        String password = getPrivateMessagesNestedString("redis", "password", "");
+        return password.isEmpty() ? getRedisPassword() : password;
+    }
+
+    public int getPrivateMessagesRedisDatabase() {
+        int database = getPrivateMessagesNestedInt("redis", "database", 0);
+        return database == 0 ? getRedisDatabase() : database;
+    }
+
+    public String getPrivateMessagesRedisProxyId() {
+        String proxyId = getPrivateMessagesDoubleNestedString("redis", "messaging", "proxy-id", "");
+        return proxyId.isEmpty() ? getRedisProxyId() : proxyId;
+    }
+
+    public String getPrivateMessagesMessageChannel() {
+        return getPrivateMessagesDoubleNestedString("redis", "messaging", "message-channel", "bmsproxycore:privatemessages:messages");
+    }
+
+    public String getPrivateMessagesLookupChannel() {
+        return getPrivateMessagesDoubleNestedString("redis", "messaging", "lookup-channel", "bmsproxycore:privatemessages:lookup");
+    }
+
+    public String getPrivateMessagesLookupResponseChannel() {
+        return getPrivateMessagesDoubleNestedString("redis", "messaging", "lookup-response-channel", "bmsproxycore:privatemessages:lookup-response");
+    }
+
+    public String getPrivateMessagesSocialSpyChannel() {
+        return getPrivateMessagesDoubleNestedString("redis", "messaging", "socialspy-channel", "bmsproxycore:privatemessages:socialspy");
+    }
+
+    public String getPrivateMessagesReplyChannel() {
+        return getPrivateMessagesDoubleNestedString("redis", "messaging", "reply-channel", "bmsproxycore:privatemessages:reply");
+    }
+
+    public String getCrossProxyPrivateMessageSenderFormat() {
+        return getPrivateMessagesString("cross-proxy-sender-format", "&8[&7You &8→ &7{receiver}&8@&6{proxy}&8] &f{message}");
+    }
+
+    public String getCrossProxyPrivateMessageReceiverFormat() {
+        return getPrivateMessagesString("cross-proxy-receiver-format", "&8[&7{sender}&8@&6{proxy} &8→ &7You&8] &f{message}");
+    }
+
+    public String getCrossProxyPrivateMessageSocialSpyFormat() {
+        return getPrivateMessagesString("cross-proxy-socialspy-format", "&8[&cSPY&8] &7{sender}&8@&6{sender_proxy} &8→ &7{receiver}&8@&6{receiver_proxy}&8: &f{message}");
+    }
+
+    public String getCrossProxyPlayerNotFoundMessage() {
+        return getPrivateMessagesString("cross-proxy-player-not-found", "&cPlayer not found on any connected proxy.");
+    }
+
+    public String getCrossProxyDeliveryFailedMessage() {
+        return getPrivateMessagesString("cross-proxy-delivery-failed", "&cFailed to deliver message to {player}. They may have disconnected.");
+    }
+
+    public String getCrossProxyLookupTimeoutMessage() {
+        return getPrivateMessagesString("cross-proxy-lookup-timeout", "&cPlayer lookup timed out. Please try again.");
     }
 
     // Private Messages Permission getters

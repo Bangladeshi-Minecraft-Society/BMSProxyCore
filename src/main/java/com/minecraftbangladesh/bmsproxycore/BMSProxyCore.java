@@ -7,6 +7,7 @@ import com.minecraftbangladesh.bmsproxycore.messaging.MessagingManager;
 import com.minecraftbangladesh.bmsproxycore.chatcontrol.ChatControlManager;
 import com.minecraftbangladesh.bmsproxycore.redis.RedisManager;
 import com.minecraftbangladesh.bmsproxycore.redis.CrossProxyStaffChatManager;
+import com.minecraftbangladesh.bmsproxycore.redis.CrossProxyMessagingManager;
 import com.minecraftbangladesh.bmsproxycore.utils.ConfigManager;
 import com.minecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
 import com.velocitypowered.api.event.Subscribe;
@@ -40,6 +41,7 @@ public class BMSProxyCore {
     private ChatControlManager chatControlManager;
     private RedisManager redisManager;
     private CrossProxyStaffChatManager crossProxyStaffChatManager;
+    private CrossProxyMessagingManager crossProxyMessagingManager;
     private final Set<UUID> staffChatToggled = new HashSet<>();
 
     @Inject
@@ -136,6 +138,17 @@ public class BMSProxyCore {
 
         // Initialize messaging manager
         messagingManager = new MessagingManager(this);
+
+        // Initialize cross-proxy messaging if Redis is enabled
+        if (configManager.isPrivateMessagesRedisEnabled() && redisManager != null && redisManager.isConnected()) {
+            crossProxyMessagingManager = new CrossProxyMessagingManager(this, redisManager);
+            crossProxyMessagingManager.initialize();
+            logger.info("Redis cross-proxy private messaging enabled");
+        } else if (configManager.isPrivateMessagesRedisEnabled()) {
+            logger.warn("Cross-proxy private messaging is enabled but Redis is not available");
+        } else {
+            logger.info("Redis cross-proxy private messaging is disabled in configuration");
+        }
 
         // Register Messaging commands
         server.getCommandManager().register(
@@ -330,6 +343,10 @@ public class BMSProxyCore {
         return crossProxyStaffChatManager;
     }
 
+    public CrossProxyMessagingManager getCrossProxyMessagingManager() {
+        return crossProxyMessagingManager;
+    }
+
     /**
      * Reload configuration and reinitialize modules as needed
      * @return ReloadResult containing information about what changed
@@ -465,6 +482,12 @@ public class BMSProxyCore {
 
     private void shutdownPrivateMessagesModule() {
         logger.info("Shutting down Private Messages module...");
+
+        // Shutdown cross-proxy messaging
+        if (crossProxyMessagingManager != null) {
+            crossProxyMessagingManager.shutdown();
+            crossProxyMessagingManager = null;
+        }
 
         // Note: Velocity doesn't provide a way to unregister commands or listeners
         // So we set the references to null and rely on the module enabled checks

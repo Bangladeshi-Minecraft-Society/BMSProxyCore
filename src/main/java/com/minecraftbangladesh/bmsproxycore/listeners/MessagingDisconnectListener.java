@@ -17,8 +17,13 @@ public class MessagingDisconnectListener {
     @Subscribe(order = PostOrder.NORMAL)
     public void onPlayerDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
-        
+
         // Remove player data from messaging manager
         plugin.getMessagingManager().handlePlayerDisconnect(player.getUniqueId());
+
+        // Broadcast player leave for cross-proxy tab completion
+        if (plugin.getCrossProxyMessagingManager() != null && plugin.getConfigManager().isPrivateMessagesRedisEnabled()) {
+            plugin.getCrossProxyMessagingManager().broadcastPlayerLeave(player);
+        }
     }
 } 

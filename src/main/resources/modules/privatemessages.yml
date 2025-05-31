@@ -52,3 +52,38 @@ error-invalid-usage-ignore: "&cUsage: /ignore <add|remove|list> [player]"
 ignore-list-header: "&6Players you are ignoring:"
 ignore-list-entry: "&7- {player}"
 ignore-list-empty: "&7You are not ignoring any players."
+
+# Redis Cross-Proxy Integration
+redis:
+  enabled: false
+  # Redis server connection details (inherits from staff chat if not specified)
+  # Leave empty to use staff chat Redis settings
+  host: ""
+  port: 0
+  password: ""
+  database: 0
+
+  # Cross-proxy messaging settings
+  messaging:
+    # Unique identifier for this proxy instance (inherits from staff chat if not specified)
+    proxy-id: "proxy-1"
+    # Redis channel for private messages
+    message-channel: "bmsproxycore:privatemessages:messages"
+    # Redis channel for player lookup requests
+    lookup-channel: "bmsproxycore:privatemessages:lookup"
+    # Redis channel for player lookup responses
+    lookup-response-channel: "bmsproxycore:privatemessages:lookup-response"
+    # Redis channel for social spy messages
+    socialspy-channel: "bmsproxycore:privatemessages:socialspy"
+    # Redis channel for reply target updates
+    reply-channel: "bmsproxycore:privatemessages:reply"
+
+  # Message format for cross-proxy messages
+  cross-proxy-sender-format: "&8[&7You &8→ &7{receiver}&8@&6{proxy}&8] &f{message}"
+  cross-proxy-receiver-format: "&8[&7{sender}&8@&6{proxy} &8→ &7You&8] &f{message}"
+  cross-proxy-socialspy-format: "&8[&cSPY&8] &7{sender}&8@&6{sender_proxy} &8→ &7{receiver}&8@&6{receiver_proxy}&8: &f{message}"
+
+  # Cross-proxy error messages
+  cross-proxy-player-not-found: "&cPlayer not found on any connected proxy."
+  cross-proxy-delivery-failed: "&cFailed to deliver message to {player}. They may have disconnected."
+  cross-proxy-lookup-timeout: "&cPlayer lookup timed out. Please try again."
