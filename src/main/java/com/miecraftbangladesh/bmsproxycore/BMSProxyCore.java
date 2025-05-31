@@ -56,6 +56,7 @@ public class BMSProxyCore {
         initializeStaffChatModule();
         initializePrivateMessagesModule();
         initializeLobbyCommandModule();
+        initializeAnnouncementModule();
 
         logger.info("BMSProxyCore has been enabled!");
     }
@@ -130,6 +131,26 @@ public class BMSProxyCore {
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
     }
 
+    private void initializeAnnouncementModule() {
+        if (!configManager.isAnnouncementEnabled()) {
+            logger.info("Announcement module is disabled in configuration.");
+            return;
+        }
+
+        logger.info("Initializing Announcement module...");
+
+        // Get command configuration
+        String mainCommand = configManager.getAnnouncementMainCommand();
+        java.util.List<String> aliases = configManager.getAnnouncementCommandAliases();
+
+        // Register announcement command with aliases
+        AnnouncementCommand announcementCommand = new AnnouncementCommand(this);
+        server.getCommandManager().register(mainCommand, announcementCommand, aliases.toArray(new String[0]));
+
+        logger.info("Announcement module initialized successfully.");
+        logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
+    }
+
     public ProxyServer getServer() {
         return server;
     }
@@ -162,6 +183,10 @@ public class BMSProxyCore {
         return configManager.isLobbyCommandEnabled();
     }
 
+    public boolean isAnnouncementModuleEnabled() {
+        return configManager.isAnnouncementEnabled();
+    }
+
     /**
      * Reload configuration and reinitialize modules as needed
      * @return ReloadResult containing information about what changed
@@ -174,6 +199,7 @@ public class BMSProxyCore {
             boolean wasStaffChatEnabled = configManager.isStaffChatEnabled();
             boolean wasPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
             boolean wasLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
+            boolean wasAnnouncementEnabled = configManager.isAnnouncementEnabled();
 
             // Reload configuration
             configManager.loadConfig();
@@ -183,6 +209,7 @@ public class BMSProxyCore {
             boolean isStaffChatEnabled = configManager.isStaffChatEnabled();
             boolean isPrivateMessagesEnabled = configManager.isPrivateMessagesEnabled();
             boolean isLobbyCommandEnabled = configManager.isLobbyCommandEnabled();
+            boolean isAnnouncementEnabled = configManager.isAnnouncementEnabled();
 
             // Handle Staff Chat module changes
             if (wasStaffChatEnabled != isStaffChatEnabled) {
@@ -227,6 +254,19 @@ public class BMSProxyCore {
             } else if (isLobbyCommandEnabled) {
                 // Module was already enabled, just reload its configuration
                 result.changes.add("Lobby Command configuration reloaded");
+            }
+
+            // Handle Announcement module changes
+            if (wasAnnouncementEnabled != isAnnouncementEnabled) {
+                if (isAnnouncementEnabled) {
+                    initializeAnnouncementModule();
+                    result.changes.add("Announcement module enabled");
+                } else {
+                    result.changes.add("Announcement module disabled");
+                }
+            } else if (isAnnouncementEnabled) {
+                // Module was already enabled, just reload its configuration
+                result.changes.add("Announcement configuration reloaded");
             }
 
             result.success = true;

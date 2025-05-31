@@ -1,0 +1,81 @@
+# Announcement Module Configuration
+# This file contains all settings related to the announcement system
+
+# Command Configuration
+# Main command name (without the /)
+main-command: "announce"
+
+# Command aliases (without the /)
+# Staff can use any of these commands to send announcements
+aliases:
+  - "announcement"
+  - "alert"
+
+# Permission Configuration
+permissions:
+  # Permission required to send announcements
+  # Set to empty string ("") to allow all players
+  send: "bmsproxycore.announcement.send"
+
+# Title Display Configuration
+title:
+  # Enable or disable title display for announcements
+  enabled: true
+  
+  # Main title text (shown as the large title)
+  # Use {announcement} placeholder for the announcement text
+  main-title: "&c&l< ALERT >"
+  
+  # Subtitle text (shown below the main title)
+  # Use {announcement} placeholder for the announcement text
+  subtitle: "&f{announcement}"
+  
+  # Title timing configuration (in ticks, 20 ticks = 1 second)
+  timing:
+    # Time for title to fade in
+    fade-in: 10
+    # Time for title to stay on screen
+    stay: 60
+    # Time for title to fade out
+    fade-out: 10
+
+# Message Configuration
+# Format for the announcement message sent to chat
+chat-message:
+  # Enable or disable chat message for announcements
+  enabled: true
+  
+  # Chat message format
+  # Available placeholders: {sender}, {announcement}
+  format: "&8[&c&lALERT&8] &f{announcement}"
+  
+  # Prefix for console announcements
+  console-format: "&8[&c&lALERT&8] &7[Console] &f{announcement}"
+
+# Network Broadcasting Configuration
+network:
+  # Enable network-wide broadcasting (sends to all servers)
+  enabled: true
+  
+  # Show sender information in announcements
+  show-sender: false
+  
+  # Format when sender information is shown
+  # Available placeholders: {sender}, {server}, {announcement}
+  sender-format: "&8[&c&lALERT&8] &7[{server}] &e{sender}&8: &f{announcement}"
+
+# Messages Configuration
+# Success message sent to the announcement sender
+success-message: "&aAnnouncement sent to all players across the network!"
+
+# Message sent when announcement text is empty
+empty-message: "&cPlease provide an announcement message."
+
+# Message sent when player doesn't have permission
+no-permission-message: "&cYou don't have permission to send announcements."
+
+# Usage message
+usage-message: "&cUsage: /{command} <message>"
+
+# Console usage message
+console-usage-message: "&7Usage: /{command} <message> - Send an announcement to all players"

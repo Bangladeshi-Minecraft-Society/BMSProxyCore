@@ -10,6 +10,8 @@ modules:
     enabled: true
   lobby_command:
     enabled: true
+  announcement:
+    enabled: true
 
 # Global Messages
 # These messages are used across all modules

@@ -19,11 +19,13 @@ public class ConfigManager {
     private final Path staffChatConfigFile;
     private final Path privateMessagesConfigFile;
     private final Path lobbyCommandConfigFile;
+    private final Path announcementConfigFile;
 
     private Map<String, Object> config;
     private Map<String, Object> staffChatConfig;
     private Map<String, Object> privateMessagesConfig;
     private Map<String, Object> lobbyCommandConfig;
+    private Map<String, Object> announcementConfig;
 
     public ConfigManager(Path dataDirectory) {
         this.dataDirectory = dataDirectory;
@@ -31,11 +33,13 @@ public class ConfigManager {
         this.staffChatConfigFile = dataDirectory.resolve("staffchat.yml");
         this.privateMessagesConfigFile = dataDirectory.resolve("privatemessages.yml");
         this.lobbyCommandConfigFile = dataDirectory.resolve("lobbycommand.yml");
+        this.announcementConfigFile = dataDirectory.resolve("announcement.yml");
 
         this.config = new HashMap<>();
         this.staffChatConfig = new HashMap<>();
         this.privateMessagesConfig = new HashMap<>();
         this.lobbyCommandConfig = new HashMap<>();
+        this.announcementConfig = new HashMap<>();
     }
 
     public void loadConfig() {
@@ -59,6 +63,10 @@ public class ConfigManager {
 
             if (isLobbyCommandEnabled()) {
                 loadLobbyCommandConfig();
+            }
+
+            if (isAnnouncementEnabled()) {
+                loadAnnouncementConfig();
             }
 
         } catch (IOException e) {
@@ -148,6 +156,17 @@ public class ConfigManager {
         return enabled instanceof Boolean ? (Boolean) enabled : true;
     }
 
+    public boolean isAnnouncementEnabled() {
+        Map<String, Object> modulesSection = getSection("modules");
+        if (modulesSection == null) return true; // Default to enabled if no modules section
+
+        Map<String, Object> announcementSection = (Map<String, Object>) modulesSection.get("announcement");
+        if (announcementSection == null) return true; // Default to enabled if no announcement section
+
+        Object enabled = announcementSection.get("enabled");
+        return enabled instanceof Boolean ? (Boolean) enabled : true;
+    }
+
     // Save default configuration files
     private void saveDefaultStaffChatConfig() {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("staffchat.yml");
@@ -195,9 +214,40 @@ public class ConfigManager {
         }
     }
 
+    private void loadAnnouncementConfig() throws IOException {
+        // Create announcement config file if it doesn't exist
+        if (!Files.exists(announcementConfigFile)) {
+            saveDefaultAnnouncementConfig();
+        }
+
+        // Load announcement config from file
+        try (InputStream inputStream = Files.newInputStream(announcementConfigFile)) {
+            Yaml yaml = new Yaml();
+            announcementConfig = yaml.load(inputStream);
+            if (announcementConfig == null) {
+                announcementConfig = new HashMap<>();
+            }
+        }
+    }
+
     private void saveDefaultLobbyCommandConfig() {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("lobbycommand.yml");
              OutputStream outputStream = Files.newOutputStream(lobbyCommandConfigFile)) {
+            if (inputStream != null) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveDefaultAnnouncementConfig() {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("announcement.yml");
+             OutputStream outputStream = Files.newOutputStream(announcementConfigFile)) {
             if (inputStream != null) {
                 byte[] buffer = new byte[1024];
                 int length;
@@ -681,5 +731,200 @@ public class ConfigManager {
     // Lobby Command Permission getters
     public String getLobbyUsePermission() {
         return getLobbyCommandNestedString("permissions", "use", "bmsproxycore.lobby.use");
+    }
+
+    // Announcement configuration helper methods
+    private String getAnnouncementString(String path, String defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Object value = announcementConfig.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    private boolean getAnnouncementBoolean(String path, boolean defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Object value = announcementConfig.get(path);
+        return value instanceof Boolean ? (Boolean) value : defaultValue;
+    }
+
+    private int getAnnouncementInt(String path, int defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Object value = announcementConfig.get(path);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getAnnouncementSection(String path) {
+        if (!isAnnouncementEnabled()) return new HashMap<>();
+        Object value = announcementConfig.get(path);
+        return value instanceof Map ? (Map<String, Object>) value : new HashMap<>();
+    }
+
+    private String getAnnouncementNestedString(String section, String path, String defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getAnnouncementSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    private boolean getAnnouncementNestedBoolean(String section, String path, boolean defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getAnnouncementSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        return value instanceof Boolean ? (Boolean) value : defaultValue;
+    }
+
+    private int getAnnouncementNestedInt(String section, String path, int defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getAnnouncementSection(section);
+        if (sectionMap == null) return defaultValue;
+        Object value = sectionMap.get(path);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private java.util.List<String> getAnnouncementStringList(String path, java.util.List<String> defaultValue) {
+        if (!isAnnouncementEnabled()) return defaultValue;
+        Object value = announcementConfig.get(path);
+        return value instanceof java.util.List ? (java.util.List<String>) value : defaultValue;
+    }
+
+    // Announcement configuration getters
+    public String getAnnouncementMainCommand() {
+        return getAnnouncementString("main-command", "announce");
+    }
+
+    public java.util.List<String> getAnnouncementCommandAliases() {
+        return getAnnouncementStringList("aliases", java.util.Arrays.asList("announcement", "alert"));
+    }
+
+    public String getAnnouncementSendPermission() {
+        return getAnnouncementNestedString("permissions", "send", "bmsproxycore.announcement.send");
+    }
+
+    public boolean isAnnouncementTitleEnabled() {
+        return getAnnouncementNestedBoolean("title", "enabled", true);
+    }
+
+    public String getAnnouncementTitleMainTitle() {
+        return getAnnouncementNestedString("title", "main-title", "&c&l< ALERT >");
+    }
+
+    public String getAnnouncementTitleSubtitle() {
+        return getAnnouncementNestedString("title", "subtitle", "&f{announcement}");
+    }
+
+    public int getAnnouncementTitleFadeIn() {
+        Map<String, Object> titleSection = getAnnouncementSection("title");
+        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
+        if (timingSection == null) return 10;
+        Object value = timingSection.get("fade-in");
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return 10;
+            }
+        }
+        return 10;
+    }
+
+    public int getAnnouncementTitleStay() {
+        Map<String, Object> titleSection = getAnnouncementSection("title");
+        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
+        if (timingSection == null) return 60;
+        Object value = timingSection.get("stay");
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return 60;
+            }
+        }
+        return 60;
+    }
+
+    public int getAnnouncementTitleFadeOut() {
+        Map<String, Object> titleSection = getAnnouncementSection("title");
+        Map<String, Object> timingSection = (Map<String, Object>) titleSection.get("timing");
+        if (timingSection == null) return 10;
+        Object value = timingSection.get("fade-out");
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return 10;
+            }
+        }
+        return 10;
+    }
+
+    public boolean isAnnouncementChatMessageEnabled() {
+        return getAnnouncementNestedBoolean("chat-message", "enabled", true);
+    }
+
+    public String getAnnouncementChatMessageFormat() {
+        return getAnnouncementNestedString("chat-message", "format", "&8[&c&lALERT&8] &f{announcement}");
+    }
+
+    public String getAnnouncementConsoleFormat() {
+        return getAnnouncementNestedString("chat-message", "console-format", "&8[&c&lALERT&8] &7[Console] &f{announcement}");
+    }
+
+    public boolean isAnnouncementNetworkEnabled() {
+        return getAnnouncementNestedBoolean("network", "enabled", true);
+    }
+
+    public boolean isAnnouncementShowSender() {
+        return getAnnouncementNestedBoolean("network", "show-sender", false);
+    }
+
+    public String getAnnouncementSenderFormat() {
+        return getAnnouncementNestedString("network", "sender-format", "&8[&c&lALERT&8] &7[{server}] &e{sender}&8: &f{announcement}");
+    }
+
+    public String getAnnouncementSuccessMessage() {
+        return getAnnouncementString("success-message", "&aAnnouncement sent to all players across the network!");
+    }
+
+    public String getAnnouncementEmptyMessage() {
+        return getAnnouncementString("empty-message", "&cPlease provide an announcement message.");
+    }
+
+    public String getAnnouncementNoPermissionMessage() {
+        return getAnnouncementString("no-permission-message", "&cYou don't have permission to send announcements.");
+    }
+
+    public String getAnnouncementUsageMessage() {
+        return getAnnouncementString("usage-message", "&cUsage: /{command} <message>");
+    }
+
+    public String getAnnouncementConsoleUsageMessage() {
+        return getAnnouncementString("console-usage-message", "&7Usage: /{command} <message> - Send an announcement to all players");
     }
 }
