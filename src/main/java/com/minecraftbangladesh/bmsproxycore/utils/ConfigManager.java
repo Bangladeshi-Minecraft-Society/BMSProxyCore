@@ -457,6 +457,43 @@ public class ConfigManager {
         return defaultValue;
     }
 
+    @SuppressWarnings("unchecked")
+    private String getStaffChatDoubleNestedString(String section, String subsection, String path, String defaultValue) {
+        if (!isStaffChatEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getStaffChatSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
+        return value instanceof String ? (String) value : defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private int getStaffChatDoubleNestedInt(String section, String subsection, String path, int defaultValue) {
+        if (!isStaffChatEnabled()) return defaultValue;
+        Map<String, Object> sectionMap = getStaffChatSection(section);
+        if (sectionMap == null) return defaultValue;
+
+        Object subsectionObj = sectionMap.get(subsection);
+        if (!(subsectionObj instanceof Map)) return defaultValue;
+
+        Map<String, Object> subsectionMap = (Map<String, Object>) subsectionObj;
+        Object value = subsectionMap.get(path);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
     private String getPrivateMessagesString(String path, String defaultValue) {
         if (!isPrivateMessagesEnabled()) return defaultValue;
         Object value = privateMessagesConfig.get(path);
@@ -772,6 +809,71 @@ public class ConfigManager {
 
     public String getStaffChatActivityPermission() {
         return getStaffChatNestedString("permissions", "activity", "bmsproxycore.staffchat.activity");
+    }
+
+    // Redis Configuration getters
+    public boolean isRedisEnabled() {
+        return getStaffChatNestedBoolean("redis", "enabled", false);
+    }
+
+    public String getRedisHost() {
+        return getStaffChatNestedString("redis", "host", "localhost");
+    }
+
+    public int getRedisPort() {
+        return getStaffChatNestedInt("redis", "port", 6379);
+    }
+
+    public String getRedisPassword() {
+        return getStaffChatNestedString("redis", "password", "");
+    }
+
+    public int getRedisDatabase() {
+        return getStaffChatNestedInt("redis", "database", 0);
+    }
+
+    public int getRedisPoolMaxTotal() {
+        return getStaffChatDoubleNestedInt("redis", "pool", "max-total", 8);
+    }
+
+    public int getRedisPoolMaxIdle() {
+        return getStaffChatDoubleNestedInt("redis", "pool", "max-idle", 8);
+    }
+
+    public int getRedisPoolMinIdle() {
+        return getStaffChatDoubleNestedInt("redis", "pool", "min-idle", 0);
+    }
+
+    public int getRedisPoolTimeout() {
+        return getStaffChatDoubleNestedInt("redis", "pool", "timeout", 2000);
+    }
+
+    public String getRedisProxyId() {
+        return getStaffChatDoubleNestedString("redis", "messaging", "proxy-id", "proxy-1");
+    }
+
+    public String getRedisChatChannel() {
+        return getStaffChatDoubleNestedString("redis", "messaging", "chat-channel", "bmsproxycore:staffchat:messages");
+    }
+
+    public String getRedisActivityChannel() {
+        return getStaffChatDoubleNestedString("redis", "messaging", "activity-channel", "bmsproxycore:staffchat:activity");
+    }
+
+    public String getCrossProxyMessageFormat() {
+        return getStaffChatString("cross-proxy-format", "{prefix} &7[{proxy}:{server}] &f{player} &8»&r {message}");
+    }
+
+    public String getCrossProxyServerSwitchFormat() {
+        return getStaffChatString("cross-proxy-server-switch-format", "{prefix} &e{player} &7switched from &6{from_server} &7to &6{to_server} &8(&7{proxy}&8)");
+    }
+
+    public String getCrossProxyConnectFormat() {
+        return getStaffChatString("cross-proxy-connect-format", "{prefix} &e{player} &ajoined &7the network &8(&7{proxy}&8)");
+    }
+
+    public String getCrossProxyDisconnectFormat() {
+        return getStaffChatString("cross-proxy-disconnect-format", "{prefix} &e{player} &cleft &7the network &8(&7{proxy}&8)");
     }
 
     // Private Messages Permission getters

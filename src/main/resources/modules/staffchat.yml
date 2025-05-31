@@ -43,3 +43,36 @@ discord:
   avatar-size: 128
   # Apply the helmet overlay to the avatar (shows if player has a hat layer)
   avatar-overlay: true
+
+# Redis Cross-Proxy Integration
+redis:
+  enabled: false
+  # Redis server connection details
+  host: "localhost"
+  port: 6379
+  password: ""
+  database: 0
+
+  # Connection pool settings
+  pool:
+    max-total: 8
+    max-idle: 8
+    min-idle: 0
+    timeout: 2000
+
+  # Cross-proxy messaging settings
+  messaging:
+    # Unique identifier for this proxy instance
+    proxy-id: "proxy-1"
+    # Redis channel for staff chat messages
+    chat-channel: "bmsproxycore:staffchat:messages"
+    # Redis channel for staff activity notifications
+    activity-channel: "bmsproxycore:staffchat:activity"
+
+  # Message format for cross-proxy messages
+  cross-proxy-format: "{prefix} &7[{proxy}:{server}] &f{player} &8»&r {message}"
+
+  # Activity message formats for cross-proxy
+  cross-proxy-server-switch-format: "{prefix} &e{player} &7switched from &6{from_server} &7to &6{to_server} &8(&7{proxy}&8)"
+  cross-proxy-connect-format: "{prefix} &e{player} &ajoined &7the network &8(&7{proxy}&8)"
+  cross-proxy-disconnect-format: "{prefix} &e{player} &cleft &7the network &8(&7{proxy}&8)"

@@ -5,6 +5,8 @@ import com.minecraftbangladesh.bmsproxycore.commands.*;
 import com.minecraftbangladesh.bmsproxycore.listeners.*;
 import com.minecraftbangladesh.bmsproxycore.messaging.MessagingManager;
 import com.minecraftbangladesh.bmsproxycore.chatcontrol.ChatControlManager;
+import com.minecraftbangladesh.bmsproxycore.redis.RedisManager;
+import com.minecraftbangladesh.bmsproxycore.redis.CrossProxyStaffChatManager;
 import com.minecraftbangladesh.bmsproxycore.utils.ConfigManager;
 import com.minecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
 import com.velocitypowered.api.event.Subscribe;
@@ -36,6 +38,8 @@ public class BMSProxyCore {
     private DiscordWebhook discordWebhook;
     private MessagingManager messagingManager;
     private ChatControlManager chatControlManager;
+    private RedisManager redisManager;
+    private CrossProxyStaffChatManager crossProxyStaffChatManager;
     private final Set<UUID> staffChatToggled = new HashSet<>();
 
     @Inject
@@ -79,6 +83,21 @@ public class BMSProxyCore {
 
         // Initialize Discord webhook
         discordWebhook = new DiscordWebhook(this);
+
+        // Initialize Redis if enabled
+        if (configManager.isRedisEnabled()) {
+            redisManager = new RedisManager(this);
+            if (redisManager.initialize()) {
+                crossProxyStaffChatManager = new CrossProxyStaffChatManager(this, redisManager);
+                crossProxyStaffChatManager.initialize();
+                logger.info("Redis cross-proxy staff chat enabled");
+            } else {
+                logger.warn("Failed to initialize Redis - cross-proxy staff chat will be disabled");
+                redisManager = null;
+            }
+        } else {
+            logger.info("Redis cross-proxy staff chat is disabled in configuration");
+        }
 
         // Register StaffChat commands
         server.getCommandManager().register(
@@ -303,6 +322,14 @@ public class BMSProxyCore {
         return configManager.isAnnouncementEnabled();
     }
 
+    public RedisManager getRedisManager() {
+        return redisManager;
+    }
+
+    public CrossProxyStaffChatManager getCrossProxyStaffChatManager() {
+        return crossProxyStaffChatManager;
+    }
+
     /**
      * Reload configuration and reinitialize modules as needed
      * @return ReloadResult containing information about what changed
@@ -418,6 +445,17 @@ public class BMSProxyCore {
     private void shutdownStaffChatModule() {
         logger.info("Shutting down Staff Chat module...");
 
+        // Shutdown Redis components
+        if (crossProxyStaffChatManager != null) {
+            crossProxyStaffChatManager.shutdown();
+            crossProxyStaffChatManager = null;
+        }
+
+        if (redisManager != null) {
+            redisManager.shutdown();
+            redisManager = null;
+        }
+
         // Note: Velocity doesn't provide a way to unregister commands or listeners
         // So we set the references to null and rely on the module enabled checks
         discordWebhook = null;
@@ -434,6 +472,8 @@ public class BMSProxyCore {
 
         logger.info("Private Messages module shut down.");
     }
+
+
 
     private void shutdownChatControlModule() {
         logger.info("Shutting down Chat Control module...");
@@ -482,18 +522,21 @@ public class BMSProxyCore {
      * @param message The message content
      */
     public void sendStaffChatMessage(Player sender, String message) {
-        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+        if (!isStaffChatModuleEnabled()) {
             return;
         }
 
-        // Get the server name
-        String serverName = sender.getCurrentServer()
-                .map(serverConnection -> serverConnection.getServerInfo().getName())
-                .orElse("Unknown");
-
         // Send to Discord if enabled
-        if (configManager.isDiscordEnabled()) {
+        if (discordWebhook != null && configManager.isDiscordEnabled()) {
+            String serverName = sender.getCurrentServer()
+                    .map(serverConnection -> serverConnection.getServerInfo().getName())
+                    .orElse("Unknown");
             discordWebhook.sendStaffChatMessage(sender, message, serverName);
+        }
+
+        // Send to Redis if enabled
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastStaffChatMessage(sender, message);
         }
     }
 
@@ -503,13 +546,18 @@ public class BMSProxyCore {
      * @param message The message content
      */
     public void sendConsoleStaffChatMessage(String message) {
-        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+        if (!isStaffChatModuleEnabled()) {
             return;
         }
 
         // Send to Discord if enabled
-        if (configManager.isDiscordEnabled()) {
+        if (discordWebhook != null && configManager.isDiscordEnabled()) {
             discordWebhook.sendConsoleStaffChatMessage(message);
+        }
+
+        // Send to Redis if enabled
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastConsoleStaffChatMessage(message);
         }
     }
 
@@ -521,13 +569,18 @@ public class BMSProxyCore {
      * @param toServer The server the player switched to
      */
     public void sendStaffServerSwitchMessage(Player player, String fromServer, String toServer) {
-        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+        if (!isStaffChatModuleEnabled()) {
             return;
         }
 
         // Send to Discord if enabled
-        if (configManager.isDiscordEnabled()) {
+        if (discordWebhook != null && configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffServerSwitchMessage(player, fromServer, toServer);
+        }
+
+        // Send to Redis if enabled
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastPlayerServerSwitch(player, fromServer, toServer);
         }
     }
 
@@ -537,13 +590,18 @@ public class BMSProxyCore {
      * @param player The player who connected
      */
     public void sendStaffConnectMessage(Player player) {
-        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+        if (!isStaffChatModuleEnabled()) {
             return;
         }
 
         // Send to Discord if enabled
-        if (configManager.isDiscordEnabled()) {
+        if (discordWebhook != null && configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffConnectMessage(player);
+        }
+
+        // Send to Redis if enabled
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastPlayerConnect(player);
         }
     }
 
@@ -553,13 +611,18 @@ public class BMSProxyCore {
      * @param player The player who disconnected
      */
     public void sendStaffDisconnectMessage(Player player) {
-        if (!isStaffChatModuleEnabled() || discordWebhook == null) {
+        if (!isStaffChatModuleEnabled()) {
             return;
         }
 
         // Send to Discord if enabled
-        if (configManager.isDiscordEnabled()) {
+        if (discordWebhook != null && configManager.isDiscordEnabled()) {
             discordWebhook.sendStaffDisconnectMessage(player);
+        }
+
+        // Send to Redis if enabled
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastPlayerDisconnect(player);
         }
     }
 }
