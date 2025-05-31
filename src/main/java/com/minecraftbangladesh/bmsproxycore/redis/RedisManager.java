@@ -165,11 +165,14 @@ public class RedisManager {
         if (!isConnected.get() || isShuttingDown.get()) {
             return null;
         }
-        
+
         try (Jedis jedis = jedisPool.getResource()) {
             return command.execute(jedis);
         } catch (JedisConnectionException e) {
             plugin.getLogger().error("Redis command execution failed", e);
+            return null;
+        } catch (Exception e) {
+            plugin.getLogger().error("Redis command execution failed with unexpected error", e);
             return null;
         }
     }
