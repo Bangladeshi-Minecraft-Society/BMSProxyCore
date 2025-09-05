@@ -46,6 +46,13 @@ public class BMSProxyCore {
     private CrossProxyMessagingManager crossProxyMessagingManager;
     private final Set<UUID> staffChatToggled = new HashSet<>();
 
+    // Track registered commands per module for safe unregistration
+    private final Set<String> staffChatRegisteredCommands = new HashSet<>();
+    private final Set<String> privateMessagesRegisteredCommands = new HashSet<>();
+    private final Set<String> lobbyRegisteredCommands = new HashSet<>();
+    private final Set<String> announcementRegisteredCommands = new HashSet<>();
+    private final Set<String> chatControlRegisteredCommands = new HashSet<>();
+
     @Inject
     public BMSProxyCore(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         this.server = server;
@@ -85,6 +92,9 @@ public class BMSProxyCore {
 
         logger.info("Initializing Staff Chat module...");
 
+        // Reset command registry for this module
+        staffChatRegisteredCommands.clear();
+
         // Initialize Discord webhook
         discordWebhook = new DiscordWebhook(this);
 
@@ -115,6 +125,8 @@ public class BMSProxyCore {
                 .build(),
             new StaffChatCommand(this)
         );
+        staffChatRegisteredCommands.add("staffchat");
+        staffChatRegisteredCommands.add("sc");
         server.getCommandManager().register(
             server.getCommandManager().metaBuilder("staffchattoggle")
                 .aliases("sctoggle")
@@ -122,6 +134,8 @@ public class BMSProxyCore {
                 .build(),
             new StaffChatToggleCommand(this)
         );
+        staffChatRegisteredCommands.add("staffchattoggle");
+        staffChatRegisteredCommands.add("sctoggle");
 
         // Register StaffChat listeners
         server.getEventManager().register(this, new ChatListener(this));
@@ -141,6 +155,9 @@ public class BMSProxyCore {
         }
 
         logger.info("Initializing Private Messages module...");
+
+        // Reset command registry for this module
+        privateMessagesRegisteredCommands.clear();
 
         // Initialize messaging manager
         messagingManager = new MessagingManager(this);
@@ -164,6 +181,8 @@ public class BMSProxyCore {
                 .build(),
             new MessageCommand(this)
         );
+        privateMessagesRegisteredCommands.add("msg");
+        privateMessagesRegisteredCommands.add("whisper");
         server.getCommandManager().register(
             server.getCommandManager().metaBuilder("reply")
                 .aliases("r")
@@ -171,24 +190,29 @@ public class BMSProxyCore {
                 .build(),
             new ReplyCommand(this)
         );
+        privateMessagesRegisteredCommands.add("reply");
+        privateMessagesRegisteredCommands.add("r");
         server.getCommandManager().register(
             server.getCommandManager().metaBuilder("socialspy")
                 .plugin(this)
                 .build(),
             new SocialSpyCommand(this)
         );
+        privateMessagesRegisteredCommands.add("socialspy");
         server.getCommandManager().register(
             server.getCommandManager().metaBuilder("msgtoggle")
                 .plugin(this)
                 .build(),
             new MessageToggleCommand(this)
         );
+        privateMessagesRegisteredCommands.add("msgtoggle");
         server.getCommandManager().register(
             server.getCommandManager().metaBuilder("ignore")
                 .plugin(this)
                 .build(),
             new IgnoreCommand(this)
         );
+        privateMessagesRegisteredCommands.add("ignore");
 
         // Register Messaging listeners
         server.getEventManager().register(this, new MessagingDisconnectListener(this));
@@ -204,6 +228,9 @@ public class BMSProxyCore {
 
         logger.info("Initializing Lobby Command module...");
 
+        // Reset command registry for this module
+        lobbyRegisteredCommands.clear();
+
         // Get command configuration
         String mainCommand = configManager.getLobbyMainCommand();
         java.util.List<String> aliases = configManager.getLobbyCommandAliases();
@@ -218,6 +245,12 @@ public class BMSProxyCore {
             lobbyCommand
         );
 
+        // Track registered names for potential unregistration
+        lobbyRegisteredCommands.add(mainCommand);
+        for (String alias : aliases) {
+            lobbyRegisteredCommands.add(alias);
+        }
+
         logger.info("Lobby Command module initialized successfully.");
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
     }
@@ -229,6 +262,9 @@ public class BMSProxyCore {
         }
 
         logger.info("Initializing Announcement module...");
+
+        // Reset command registry for this module
+        announcementRegisteredCommands.clear();
 
         // Get command configuration
         String mainCommand = configManager.getAnnouncementMainCommand();
@@ -244,6 +280,12 @@ public class BMSProxyCore {
             announcementCommand
         );
 
+        // Track registered names for potential unregistration
+        announcementRegisteredCommands.add(mainCommand);
+        for (String alias : aliases) {
+            announcementRegisteredCommands.add(alias);
+        }
+
         logger.info("Announcement module initialized successfully.");
         logger.info("Registered command: /" + mainCommand + " with aliases: " + aliases);
     }
@@ -255,6 +297,9 @@ public class BMSProxyCore {
         }
 
         logger.info("Initializing Chat Control module...");
+
+        // Reset command registry for this module
+        chatControlRegisteredCommands.clear();
 
         // Initialize chat control manager
         chatControlManager = new ChatControlManager(this);
@@ -276,6 +321,12 @@ public class BMSProxyCore {
             );
 
             logger.info("Chat Filter component initialized with command: /" + filterMainCommand);
+
+            // Track registered names
+            chatControlRegisteredCommands.add(filterMainCommand);
+            for (String alias : filterAliases) {
+                chatControlRegisteredCommands.add(alias);
+            }
         }
 
         // Register Chat Cooldown commands if cooldown component is enabled
@@ -292,6 +343,12 @@ public class BMSProxyCore {
             );
 
             logger.info("Chat Cooldown component initialized with command: /" + cooldownMainCommand);
+
+            // Track registered names
+            chatControlRegisteredCommands.add(cooldownMainCommand);
+            for (String alias : cooldownAliases) {
+                chatControlRegisteredCommands.add(alias);
+            }
         }
 
         // Register Clear Chat commands if clear chat component is enabled
@@ -308,6 +365,12 @@ public class BMSProxyCore {
             );
 
             logger.info("Clear Chat component initialized with command: /" + clearChatMainCommand);
+
+            // Track registered names
+            chatControlRegisteredCommands.add(clearChatMainCommand);
+            for (String alias : clearChatAliases) {
+                chatControlRegisteredCommands.add(alias);
+            }
         }
 
         // Register Lock Chat commands if lock chat component is enabled
@@ -324,6 +387,12 @@ public class BMSProxyCore {
             );
 
             logger.info("Lock Chat component initialized with command: /" + lockChatMainCommand);
+
+            // Track registered names
+            chatControlRegisteredCommands.add(lockChatMainCommand);
+            for (String alias : lockChatAliases) {
+                chatControlRegisteredCommands.add(alias);
+            }
         }
 
         logger.info("Chat Control module initialized successfully.");
@@ -449,6 +518,7 @@ public class BMSProxyCore {
                     initializeLobbyCommandModule();
                     result.changes.add("Lobby Command module enabled");
                 } else {
+                    shutdownLobbyCommandModule();
                     result.changes.add("Lobby Command module disabled");
                 }
             } else if (isLobbyCommandEnabled) {
@@ -462,6 +532,7 @@ public class BMSProxyCore {
                     initializeAnnouncementModule();
                     result.changes.add("Announcement module enabled");
                 } else {
+                    shutdownAnnouncementModule();
                     result.changes.add("Announcement module disabled");
                 }
             } else if (isAnnouncementEnabled) {
@@ -500,6 +571,9 @@ public class BMSProxyCore {
     private void shutdownStaffChatModule() {
         logger.info("Shutting down Staff Chat module...");
 
+        // Unregister commands registered by this module
+        unregisterCommands(staffChatRegisteredCommands);
+
         // Shutdown Redis components
         if (crossProxyStaffChatManager != null) {
             crossProxyStaffChatManager.shutdown();
@@ -527,6 +601,9 @@ public class BMSProxyCore {
     private void shutdownPrivateMessagesModule() {
         logger.info("Shutting down Private Messages module...");
 
+        // Unregister commands registered by this module
+        unregisterCommands(privateMessagesRegisteredCommands);
+
         // Shutdown cross-proxy messaging
         if (crossProxyMessagingManager != null) {
             crossProxyMessagingManager.shutdown();
@@ -545,11 +622,49 @@ public class BMSProxyCore {
     private void shutdownChatControlModule() {
         logger.info("Shutting down Chat Control module...");
 
+        // Unregister commands registered by this module
+        unregisterCommands(chatControlRegisteredCommands);
+
         // Note: Velocity doesn't provide a way to unregister commands or listeners
         // So we set the references to null and rely on the module enabled checks
         chatControlManager = null;
 
         logger.info("Chat Control module shut down.");
+    }
+
+    private void shutdownLobbyCommandModule() {
+        logger.info("Shutting down Lobby Command module...");
+
+        // Unregister commands registered by this module
+        unregisterCommands(lobbyRegisteredCommands);
+
+        logger.info("Lobby Command module shut down.");
+    }
+
+    private void shutdownAnnouncementModule() {
+        logger.info("Shutting down Announcement module...");
+
+        // Unregister commands registered by this module
+        unregisterCommands(announcementRegisteredCommands);
+
+        logger.info("Announcement module shut down.");
+    }
+
+    private void unregisterCommands(Set<String> commandNames) {
+        if (commandNames == null || commandNames.isEmpty()) {
+            return;
+        }
+
+        var commandManager = server.getCommandManager();
+        for (String name : commandNames) {
+            try {
+                commandManager.unregister(name);
+            } catch (Exception e) {
+                logger.warn("Failed to unregister command '{}': {}", name, e.getMessage());
+            }
+        }
+
+        commandNames.clear();
     }
 
     /**
