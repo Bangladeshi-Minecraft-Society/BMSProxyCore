@@ -402,6 +402,15 @@ public class ConfigManager {
         return value instanceof String ? (String) value : defaultValue;
     }
 
+    @SuppressWarnings("unchecked")
+    private java.util.List<String> getStaffChatNestedStringList(String section, String path) {
+        if (!isStaffChatEnabled()) return new java.util.ArrayList<>();
+        Map<String, Object> sectionMap = getStaffChatSection(section);
+        if (sectionMap == null) return new java.util.ArrayList<>();
+        Object value = sectionMap.get(path);
+        return value instanceof java.util.List ? (java.util.List<String>) value : new java.util.ArrayList<>();
+    }
+
 
 
     private String getLobbyCommandNestedString(String section, String path, String defaultValue) {
@@ -695,6 +704,19 @@ public class ConfigManager {
 
     public String getDiscordDisconnectFormat() {
         return getStaffChatNestedString("discord", "disconnect-format", "**{player}** left the network");
+    }
+
+    // Discord Bot (Inbound) configuration
+    public boolean isDiscordBotEnabled() {
+        return getStaffChatNestedBoolean("discord-bot", "enabled", false);
+    }
+
+    public String getDiscordBotToken() {
+        return getStaffChatNestedString("discord-bot", "token", "");
+    }
+
+    public java.util.List<String> getDiscordBotStaffChannelIds() {
+        return getStaffChatNestedStringList("discord-bot", "staff-channel-ids");
     }
 
     // Messaging system configuration

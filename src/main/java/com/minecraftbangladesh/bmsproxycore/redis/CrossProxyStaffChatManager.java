@@ -19,6 +19,7 @@ public class CrossProxyStaffChatManager {
     
     // Message types for Redis communication
     private static final String MESSAGE_TYPE_CHAT = "chat";
+    private static final String MESSAGE_TYPE_DISCORD = "discord";
     private static final String MESSAGE_TYPE_ACTIVITY_CONNECT = "activity_connect";
     private static final String MESSAGE_TYPE_ACTIVITY_DISCONNECT = "activity_disconnect";
     private static final String MESSAGE_TYPE_ACTIVITY_SERVER_SWITCH = "activity_server_switch";
@@ -211,6 +212,9 @@ public class CrossProxyStaffChatManager {
                     case MESSAGE_TYPE_CHAT:
                         handleCrossProxyChatMessage(messageData);
                         break;
+                    case MESSAGE_TYPE_DISCORD:
+                        handleCrossProxyDiscordMessage(messageData);
+                        break;
                     case MESSAGE_TYPE_ACTIVITY_CONNECT:
                         handleCrossProxyConnectActivity(messageData);
                         break;
@@ -283,6 +287,57 @@ public class CrossProxyStaffChatManager {
 
         } catch (Exception e) {
             plugin.getLogger().error("Failed to handle cross-proxy chat message", e);
+        }
+    }
+
+    /**
+     * Broadcast a Discord-originated staff chat message to other proxies
+     */
+    public void broadcastDiscordStaffChatMessage(String discordUsername, String message) {
+        if (!redisManager.isConnected()) {
+            return;
+        }
+
+        try {
+            JSONObject messageData = new JSONObject();
+            messageData.put("type", MESSAGE_TYPE_DISCORD);
+            messageData.put("proxy_id", plugin.getConfigManager().getRedisProxyId());
+            messageData.put("discord_username", discordUsername);
+            messageData.put("message", message);
+            messageData.put("timestamp", System.currentTimeMillis());
+
+            String channel = plugin.getConfigManager().getRedisChatChannel();
+            redisManager.publishMessage(channel, messageData.toString());
+
+        } catch (Exception e) {
+            plugin.getLogger().error("Failed to broadcast discord staff chat message", e);
+        }
+    }
+
+    /**
+     * Handle incoming Discord-originated staff chat messages from other proxies
+     */
+    private void handleCrossProxyDiscordMessage(JSONObject messageData) {
+        try {
+            String discordUsername = messageData.getString("discord_username");
+            String messageText = messageData.getString("message");
+            String sourceProxyId = messageData.getString("proxy_id");
+
+            Component formattedMessage = MessageUtils.formatMessage(
+                plugin.getConfigManager().getCrossProxyMessageFormat()
+                    .replace("{prefix}", plugin.getConfigManager().getStaffChatPrefix())
+                    .replace("{proxy}", sourceProxyId)
+                    .replace("{server}", "Discord")
+                    .replace("{player}", discordUsername)
+                    .replace("{message}", messageText)
+            );
+
+            String usePermission = plugin.getConfigManager().getStaffChatUsePermission();
+            MessageUtils.broadcastToPermission(plugin.getServer(), formattedMessage, usePermission);
+            plugin.getLogger().info(MessageUtils.componentToPlainText(formattedMessage));
+
+        } catch (Exception e) {
+            plugin.getLogger().error("Failed to handle cross-proxy discord message", e);
         }
     }
 

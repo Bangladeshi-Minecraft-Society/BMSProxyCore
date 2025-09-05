@@ -44,6 +44,15 @@ discord:
   # Apply the helmet overlay to the avatar (shows if player has a hat layer)
   avatar-overlay: true
 
+# Discord Bot (Inbound) Integration
+discord-bot:
+  enabled: false
+  # Bot token from your Discord application (keep this secret!)
+  token: "YOUR_BOT_TOKEN_HERE"
+  # One or more Discord channel IDs that represent your staff chat
+  staff-channel-ids:
+    - "000000000000000000"
+
 # Redis Cross-Proxy Integration
 redis:
   enabled: false

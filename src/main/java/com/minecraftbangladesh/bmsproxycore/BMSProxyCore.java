@@ -9,6 +9,7 @@ import com.minecraftbangladesh.bmsproxycore.redis.RedisManager;
 import com.minecraftbangladesh.bmsproxycore.redis.CrossProxyStaffChatManager;
 import com.minecraftbangladesh.bmsproxycore.redis.CrossProxyMessagingManager;
 import com.minecraftbangladesh.bmsproxycore.utils.ConfigManager;
+import com.minecraftbangladesh.bmsproxycore.discord.DiscordBotManager;
 import com.minecraftbangladesh.bmsproxycore.utils.DiscordWebhook;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -37,6 +38,7 @@ public class BMSProxyCore {
     private final Path dataDirectory;
     private ConfigManager configManager;
     private DiscordWebhook discordWebhook;
+    private DiscordBotManager discordBotManager;
     private MessagingManager messagingManager;
     private ChatControlManager chatControlManager;
     private RedisManager redisManager;
@@ -85,6 +87,10 @@ public class BMSProxyCore {
 
         // Initialize Discord webhook
         discordWebhook = new DiscordWebhook(this);
+
+        // Initialize Discord bot for inbound messages
+        discordBotManager = new DiscordBotManager(this);
+        discordBotManager.initialize();
 
         // Initialize Redis if enabled
         if (configManager.isRedisEnabled()) {
@@ -505,6 +511,12 @@ public class BMSProxyCore {
             redisManager = null;
         }
 
+        // Shutdown Discord bot
+        if (discordBotManager != null) {
+            discordBotManager.shutdown();
+            discordBotManager = null;
+        }
+
         // Note: Velocity doesn't provide a way to unregister commands or listeners
         // So we set the references to null and rely on the module enabled checks
         discordWebhook = null;
@@ -613,6 +625,28 @@ public class BMSProxyCore {
         // Send to Redis if enabled
         if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
             crossProxyStaffChatManager.broadcastConsoleStaffChatMessage(message);
+        }
+    }
+
+    /**
+     * Handle an inbound staff chat message from Discord.
+     * Broadcasts locally to staff and publishes cross-proxy if enabled.
+     */
+    public void handleDiscordInboundMessage(String discordUsername, String message) {
+        if (!isStaffChatModuleEnabled()) {
+            return;
+        }
+
+        // Format and broadcast locally
+        net.kyori.adventure.text.Component formatted = com.minecraftbangladesh.bmsproxycore.utils.MessageUtils
+                .formatDiscordInboundStaffChatMessage(discordUsername, message, configManager);
+        String usePermission = configManager.getStaffChatUsePermission();
+        com.minecraftbangladesh.bmsproxycore.utils.MessageUtils.broadcastToPermission(server, formatted, usePermission);
+        logger.info(com.minecraftbangladesh.bmsproxycore.utils.MessageUtils.componentToPlainText(formatted));
+
+        // Publish cross-proxy so other proxies receive it
+        if (crossProxyStaffChatManager != null && configManager.isRedisEnabled()) {
+            crossProxyStaffChatManager.broadcastDiscordStaffChatMessage(discordUsername, message);
         }
     }
 

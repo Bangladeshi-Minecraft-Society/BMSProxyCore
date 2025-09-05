@@ -102,6 +102,22 @@ public class MessageUtils {
         
         return formatMessage(format);
     }
+
+    /**
+     * Formats a staff chat message for inbound Discord messages.
+     * Displays the Discord username as the sender and marks server as Discord.
+     */
+    public static Component formatDiscordInboundStaffChatMessage(String discordUsername, String message, ConfigManager configManager) {
+        String prefix = configManager.getStaffChatPrefix();
+        String format = configManager.getMessageFormat();
+
+        format = format.replace("{prefix}", prefix)
+                .replace("{player}", discordUsername)
+                .replace("{server}", "Discord")
+                .replace("{message}", message);
+
+        return formatMessage(format);
+    }
     
     /**
      * Formats a staff disconnect message using the configured format.
